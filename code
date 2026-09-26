@@ -1,0 +1,564 @@
+#include <iostream>
+#include <iomanip>
+#include <string>
+
+using namespace std;
+
+// Maximum number of users
+const int MAX_USERS = 100;
+
+// ============================================================
+// NODE FOR LINKED LIST
+// ============================================================
+struct Investment
+{
+    string stockName;
+    int quantity;
+    double price;
+    double totalInvested;
+
+    Investment* next;
+
+    Investment(string stock = "", int qty = 0, double p = 0.0)
+    {
+        stockName = stock;
+        quantity = qty;
+        price = p;
+        totalInvested = qty * p;
+        next = nullptr;
+    }
+};
+
+// ============================================================
+// USER STRUCTURE
+// EACH USER HAS A LINKED LIST OF INVESTMENTS
+// ============================================================
+struct User
+{
+    string userID;
+    string name;
+    Investment* head;
+
+    User()
+    {
+        userID = "";
+        name = "";
+        head = nullptr;
+    }
+};
+
+// ============================================================
+// GLOBAL USER ARRAY
+// ============================================================
+User users[MAX_USERS];
+int userCount = 0;
+
+// ============================================================
+// FIND USER USING USER ID
+// ARRAY SEARCH
+// ============================================================
+int findUser(string id)
+{
+    for (int i = 0; i < userCount; i++)
+    {
+        if (users[i].userID == id)
+        {
+            return i;
+        }
+    }
+
+    return -1;
+}
+
+// ============================================================
+// FIND A STOCK INSIDE A USER'S LINKED LIST
+// ============================================================
+Investment* findInvestment(User& user, string stockName)
+{
+    Investment* current = user.head;
+
+    while (current != nullptr)
+    {
+        if (current->stockName == stockName)
+        {
+            return current;
+        }
+
+        current = current->next;
+    }
+
+    return nullptr;
+}
+
+// ============================================================
+// ADD NEW USER
+// ============================================================
+void addUser()
+{
+    if (userCount >= MAX_USERS)
+    {
+        cout << "\nMaximum user limit reached.\n";
+        return;
+    }
+
+    string id;
+    string name;
+
+    cout << "\nEnter User ID: ";
+    cin >> id;
+
+    // Check whether ID already exists
+    if (findUser(id) != -1)
+    {
+        cout << "User ID already exists.\n";
+        return;
+    }
+
+    cout << "Enter User Name: ";
+    cin >> name;
+
+    users[userCount].userID = id;
+    users[userCount].name = name;
+    users[userCount].head = nullptr;
+
+    userCount++;
+
+    cout << "\nUser added successfully.\n";
+}
+
+// ============================================================
+// ADD INVESTMENT
+// ============================================================
+void addInvestment()
+{
+    string userID;
+    string stockName;
+    int quantity;
+    double price;
+
+    cout << "\nEnter User ID: ";
+    cin >> userID;
+
+    int index = findUser(userID);
+
+    if (index == -1)
+    {
+        cout << "User not found.\n";
+        return;
+    }
+
+    cout << "Enter Stock Name: ";
+    cin >> stockName;
+
+    cout << "Enter Quantity: ";
+    cin >> quantity;
+
+    cout << "Enter Price per Stock: ";
+    cin >> price;
+
+    if (quantity <= 0 || price <= 0)
+    {
+        cout << "Quantity and price must be greater than 0.\n";
+        return;
+    }
+
+    User& user = users[index];
+
+    // Check if user already owns this stock
+    Investment* existing = findInvestment(user, stockName);
+
+    if (existing != nullptr)
+    {
+        // Add new investment to existing stock
+        existing->totalInvested += quantity * price;
+        existing->quantity += quantity;
+
+        // Calculate average purchase price
+        existing->price =
+            existing->totalInvested / existing->quantity;
+
+        cout << "\nExisting stock updated successfully.\n";
+        return;
+    }
+
+    // Create new linked-list node
+    Investment* newInvestment =
+        new Investment(stockName, quantity, price);
+
+    // If linked list is empty
+    if (user.head == nullptr)
+    {
+        user.head = newInvestment;
+    }
+    else
+    {
+        // Go to last node
+        Investment* current = user.head;
+
+        while (current->next != nullptr)
+        {
+            current = current->next;
+        }
+
+        current->next = newInvestment;
+    }
+
+    cout << "\nInvestment added successfully.\n";
+}
+
+// ============================================================
+// CALCULATE TOTAL PORTFOLIO INVESTMENT
+// ============================================================
+double calculateTotal(User& user)
+{
+    double total = 0.0;
+
+    Investment* current = user.head;
+
+    while (current != nullptr)
+    {
+        total += current->totalInvested;
+        current = current->next;
+    }
+
+    return total;
+}
+
+// ============================================================
+// VIEW PORTFOLIO
+// ============================================================
+void viewPortfolio()
+{
+    string userID;
+
+    cout << "\nEnter User ID: ";
+    cin >> userID;
+
+    int index = findUser(userID);
+
+    if (index == -1)
+    {
+        cout << "User not found.\n";
+        return;
+    }
+
+    User& user = users[index];
+
+    cout << "\n============================================\n";
+    cout << "           USER PORTFOLIO\n";
+    cout << "============================================\n";
+
+    cout << "User ID   : " << user.userID << endl;
+    cout << "User Name : " << user.name << endl;
+
+    if (user.head == nullptr)
+    {
+        cout << "\nNo investments found.\n";
+        return;
+    }
+
+    double totalPortfolio = calculateTotal(user);
+
+    cout << "\n";
+    cout << left
+         << setw(15) << "Stock"
+         << setw(12) << "Quantity"
+         << setw(15) << "Avg Price"
+         << setw(18) << "Invested"
+         << setw(12) << "Allocation"
+         << endl;
+
+    cout << "---------------------------------------------------------------------\n";
+
+    Investment* current = user.head;
+
+    while (current != nullptr)
+    {
+        double percentage =
+            (current->totalInvested / totalPortfolio) * 100.0;
+
+        cout << left
+             << setw(15) << current->stockName
+             << setw(12) << current->quantity
+             << setw(15) << fixed << setprecision(2) << current->price
+             << setw(18) << current->totalInvested
+             << setw(11) << percentage << "%"
+             << endl;
+
+        current = current->next;
+    }
+
+    cout << "---------------------------------------------------------------------\n";
+
+    cout << "Total Portfolio Investment: Rs. "
+         << fixed << setprecision(2)
+         << totalPortfolio << endl;
+}
+
+// ============================================================
+// SELECTION SORT ON LINKED LIST
+// SORT BY TOTAL INVESTED (DESCENDING)
+// ============================================================
+void selectionSort(Investment* head)
+{
+    Investment* current = head;
+
+    while (current != nullptr)
+    {
+        Investment* maxNode = current;
+        Investment* search = current->next;
+
+        // Find the node with highest investment
+        while (search != nullptr)
+        {
+            if (search->totalInvested > maxNode->totalInvested)
+            {
+                maxNode = search;
+            }
+
+            search = search->next;
+        }
+
+        // Swap data, not nodes
+        if (maxNode != current)
+        {
+            string tempStock = current->stockName;
+            current->stockName = maxNode->stockName;
+            maxNode->stockName = tempStock;
+
+            int tempQuantity = current->quantity;
+            current->quantity = maxNode->quantity;
+            maxNode->quantity = tempQuantity;
+
+            double tempPrice = current->price;
+            current->price = maxNode->price;
+            maxNode->price = tempPrice;
+
+            double tempTotal = current->totalInvested;
+            current->totalInvested = maxNode->totalInvested;
+            maxNode->totalInvested = tempTotal;
+        }
+
+        current = current->next;
+    }
+}
+
+// ============================================================
+// SHOW INVESTMENT RANKING
+// ============================================================
+void showInvestmentRanking()
+{
+    string userID;
+
+    cout << "\nEnter User ID: ";
+    cin >> userID;
+
+    int index = findUser(userID);
+
+    if (index == -1)
+    {
+        cout << "User not found.\n";
+        return;
+    }
+
+    User& user = users[index];
+
+    if (user.head == nullptr)
+    {
+        cout << "No investments found.\n";
+        return;
+    }
+
+    // Sort linked list using Selection Sort
+    selectionSort(user.head);
+
+    cout << "\n============================================\n";
+    cout << "        INVESTMENT RANKING\n";
+    cout << "============================================\n";
+
+    cout << "User ID   : " << user.userID << endl;
+    cout << "User Name : " << user.name << endl;
+
+    cout << "\nStocks ranked from HIGHEST to LOWEST investment:\n\n";
+
+    cout << left
+         << setw(8) << "Rank"
+         << setw(15) << "Stock"
+         << setw(12) << "Quantity"
+         << setw(15) << "Avg Price"
+         << setw(18) << "Investment"
+         << endl;
+
+    cout << "----------------------------------------------------------------\n";
+
+    Investment* current = user.head;
+
+    int rank = 1;
+
+    while (current != nullptr)
+    {
+        cout << left
+             << setw(8) << rank
+             << setw(15) << current->stockName
+             << setw(12) << current->quantity
+             << setw(15) << fixed << setprecision(2) << current->price
+             << setw(18) << current->totalInvested
+             << endl;
+
+        current = current->next;
+        rank++;
+    }
+
+    cout << "----------------------------------------------------------------\n";
+
+    double totalPortfolio = calculateTotal(user);
+
+    cout << "Total Portfolio Investment: Rs. "
+         << fixed << setprecision(2)
+         << totalPortfolio << endl;
+
+    cout << "\nHighest Investment: "
+         << user.head->stockName
+         << " (Rs. "
+         << fixed << setprecision(2)
+         << user.head->totalInvested
+         << ")\n";
+}
+
+// ============================================================
+// SEARCH USER
+// ============================================================
+void searchUser()
+{
+    string userID;
+
+    cout << "\nEnter User ID to search: ";
+    cin >> userID;
+
+    int index = findUser(userID);
+
+    if (index == -1)
+    {
+        cout << "\nUser not found.\n";
+        return;
+    }
+
+    User& user = users[index];
+
+    cout << "\n============================================\n";
+    cout << "              USER FOUND\n";
+    cout << "============================================\n";
+
+    cout << "User ID   : " << user.userID << endl;
+    cout << "User Name : " << user.name << endl;
+
+    int investmentCount = 0;
+
+    Investment* current = user.head;
+
+    while (current != nullptr)
+    {
+        investmentCount++;
+        current = current->next;
+    }
+
+    cout << "Different Stocks: " << investmentCount << endl;
+
+    cout << "Total Investment: Rs. "
+         << fixed << setprecision(2)
+         << calculateTotal(user) << endl;
+}
+
+// ============================================================
+// DELETE ALL LINKED LIST NODES
+// MEMORY CLEANUP
+// ============================================================
+void clearInvestments(User& user)
+{
+    Investment* current = user.head;
+
+    while (current != nullptr)
+    {
+        Investment* nextNode = current->next;
+        delete current;
+        current = nextNode;
+    }
+
+    user.head = nullptr;
+}
+
+// ============================================================
+// MAIN MENU
+// ============================================================
+void showMenu()
+{
+    cout << "\n\n";
+    cout << "============================================\n";
+    cout << "      STOCK PORTFOLIO MANAGEMENT SYSTEM\n";
+    cout << "============================================\n";
+
+    cout << "1. Add User\n";
+    cout << "2. Add Stock Investment\n";
+    cout << "3. View Portfolio\n";
+    cout << "4. Show Investment Ranking\n";
+    cout << "5. Search User\n";
+    cout << "6. Exit\n";
+
+    cout << "============================================\n";
+    cout << "Enter your choice: ";
+}
+
+// ============================================================
+// MAIN FUNCTION
+// ============================================================
+int main()
+{
+    int choice;
+
+    do
+    {
+        showMenu();
+        cin >> choice;
+
+        switch (choice)
+        {
+            case 1:
+                addUser();
+                break;
+
+            case 2:
+                addInvestment();
+                break;
+
+            case 3:
+                viewPortfolio();
+                break;
+
+            case 4:
+                showInvestmentRanking();
+                break;
+
+            case 5:
+                searchUser();
+                break;
+
+            case 6:
+                cout << "\nClosing program...\n";
+
+                // Free linked-list memory
+                for (int i = 0; i < userCount; i++)
+                {
+                    clearInvestments(users[i]);
+                }
+
+                cout << "Thank you for using the system.\n";
+                break;
+
+            default:
+                cout << "\nInvalid choice. Please try again.\n";
+        }
+
+    } while (choice != 6);
+
+    return 0;
+}
