@@ -1,0 +1,54 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  body {
+    @apply bg-[#0B0F19] text-slate-100 font-sans antialiased;
+    color-scheme: dark;
+  }
+
+  /* Custom subtle scrollbars for dark mode */
+  ::-webkit-scrollbar {
+    width: 6px;
+    height: 6px;
+  }
+  ::-webkit-scrollbar-track {
+    background: #0B0F19;
+  }
+  ::-webkit-scrollbar-thumb {
+    background: #1E293B;
+    border-radius: 9999px;
+  }
+  ::-webkit-scrollbar-thumb:hover {
+    background: #334155;
+  }
+}
+
+@layer components {
+  /* Glass card styling */
+  .fintech-card {
+    @apply bg-[#111827] border border-[#1E293B] rounded-xl shadow-lg;
+  }
+
+  .fintech-card-hover {
+    @apply transition-all duration-200 hover:border-emerald-500/40 hover:shadow-emerald-500/5;
+  }
+
+  /* Inputs and buttons */
+  .fintech-input {
+    @apply w-full bg-[#0B0F19] border border-[#273549] rounded-lg px-3.5 py-2.5 text-sm text-slate-100 placeholder-slate-500 focus:outline-none focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 transition-colors;
+  }
+
+  .fintech-btn-primary {
+    @apply inline-flex items-center justify-center gap-2 px-4 py-2 text-sm font-semibold text-slate-900 bg-emerald-400 hover:bg-emerald-300 active:bg-emerald-500 rounded-lg shadow-sm shadow-emerald-950 transition-all focus:outline-none focus:ring-2 focus:ring-emerald-400/50 disabled:opacity-50 disabled:pointer-events-none;
+  }
+
+  .fintech-btn-secondary {
+    @apply inline-flex items-center justify-center gap-2 px-4 py-2 text-sm font-medium text-slate-300 hover:text-white bg-[#1E293B] hover:bg-[#28384E] active:bg-[#1E293B] border border-[#334155] rounded-lg transition-colors focus:outline-none focus:ring-2 focus:ring-slate-400/20 disabled:opacity-50 disabled:pointer-events-none;
+  }
+
+  .fintech-btn-danger {
+    @apply inline-flex items-center justify-center gap-2 px-4 py-2 text-sm font-medium text-rose-300 hover:text-rose-100 bg-rose-950/40 hover:bg-rose-900/60 border border-rose-800/40 rounded-lg transition-colors focus:outline-none focus:ring-2 focus:ring-rose-500/30 disabled:opacity-50 disabled:pointer-events-none;
+  }
+}
