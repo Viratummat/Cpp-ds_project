@@ -1,0 +1,49 @@
+{
+    "version": "2.0.0",
+    "tasks": [
+        {
+            "type": "shell",
+            "label": "Build Portfolio (C++)",
+            "command": "g++",
+            "args": [
+                "-std=c++11",
+                "-Wall",
+                "-O2",
+                "main.cpp",
+                "Portfolio.cpp",
+                "-o",
+                "portfolio.exe"
+            ],
+            "options": {
+                "cwd": "${workspaceFolder}"
+            },
+            "problemMatcher": [
+                "$gcc"
+            ],
+            "group": {
+                "kind": "build",
+                "isDefault": true
+            },
+            "detail": "Compiles main.cpp and Portfolio.cpp into portfolio.exe using MinGW g++"
+        },
+        {
+            "type": "shell",
+            "label": "Run Portfolio Application",
+            "command": "${workspaceFolder}/portfolio.exe",
+            "dependsOn": "Build Portfolio (C++)",
+            "group": "test",
+            "problemMatcher": [],
+            "detail": "Runs portfolio.exe in VS Code integrated terminal"
+        },
+        {
+            "type": "shell",
+            "label": "Run Automated Tests",
+            "command": "g++ -std=c++11 -Wall -O2 test_portfolio.cpp Portfolio.cpp -o test_runner.exe && ./test_runner.exe",
+            "group": "test",
+            "problemMatcher": [
+                "$gcc"
+            ],
+            "detail": "Compiles and executes automated test suite"
+        }
+    ]
+}
