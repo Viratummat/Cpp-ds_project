@@ -10,3 +10,7 @@ test_persistence.txt
 
 # Logs & temp
 *.log
+node_modules/
+dist/
+build/
+*.tmp

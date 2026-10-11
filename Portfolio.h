@@ -79,14 +79,21 @@ Investment* findInvestment(User& user, const std::string& stockName);
 double calculateTotal(const User& user);
 int countHoldings(const User& user);
 
-// User Management
+// Core Programmatic API (for GUI & CLI)
+bool registerUserCore(const std::string& id, const std::string& name, std::string& outError);
+bool editUserNameCore(const std::string& id, const std::string& newName, std::string& outError);
+bool deleteUserCore(const std::string& id, std::string& outError);
+bool addInvestmentCore(const std::string& userId, const std::string& stock, int qty, double price, std::string& outMsg, std::string& outError);
+bool editInvestmentCore(const std::string& userId, const std::string& stock, int newQty, double newPrice, std::string& outError);
+bool deleteInvestmentCore(const std::string& userId, const std::string& stock, std::string& outError);
+
+// Console Interactive Operations
 void addUser();
 void viewAllUsers();
 void searchUser();
 void editUserName();
 void deleteUser();
 
-// Investment Management
 void addInvestment();
 void editInvestment();
 void deleteInvestment();
@@ -101,6 +108,16 @@ void viewOverallSystemAnalytics();
 void selectionSort(Investment* head, bool descending = true);
 void showInvestmentRankingSubmenu();
 void displaySortedHoldings(const User& user, bool descending);
+
+// User-level Selection Sort (Ascending and Descending)
+struct UserRankingItem
+{
+    std::string userID;
+    std::string name;
+    double totalInvested;
+    int holdingsCount;
+};
+void selectionSortUsers(UserRankingItem items[], int count, bool descending = true);
 
 // File Persistence & Backup / Restore
 bool saveToFile(const std::string& filename = DEFAULT_DATA_FILE);

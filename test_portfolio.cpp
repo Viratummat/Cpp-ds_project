@@ -125,7 +125,24 @@ void runTests()
     assert(users[0].head->next->next->next->stockName == "ITC");
     cout << "[PASS] Non-mutating sorting safety verified: original sequence intact.\n";
 
-    // 7. File Persistence Test
+    // 7. Test User Selection Sort (Descending and Ascending)
+    UserRankingItem rankUsers[3] = {
+        {"U1", "Alice", 15000.0, 1},
+        {"U2", "Bob", 45000.0, 3},
+        {"U3", "Charlie", 25000.0, 2}
+    };
+    selectionSortUsers(rankUsers, 3, true); // Descending
+    assert(rankUsers[0].name == "Bob" && rankUsers[0].totalInvested == 45000.0);
+    assert(rankUsers[1].name == "Charlie" && rankUsers[1].totalInvested == 25000.0);
+    assert(rankUsers[2].name == "Alice" && rankUsers[2].totalInvested == 15000.0);
+
+    selectionSortUsers(rankUsers, 3, false); // Ascending
+    assert(rankUsers[0].name == "Alice" && rankUsers[0].totalInvested == 15000.0);
+    assert(rankUsers[1].name == "Charlie" && rankUsers[1].totalInvested == 25000.0);
+    assert(rankUsers[2].name == "Bob" && rankUsers[2].totalInvested == 45000.0);
+    cout << "[PASS] User-level Selection Sort (Ascending & Descending) verified.\n";
+
+    // 8. File Persistence Test
     const string testFile = "test_persistence.txt";
     bool saveOk = saveToFile(testFile);
     assert(saveOk == true);

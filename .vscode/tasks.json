@@ -3,7 +3,46 @@
     "tasks": [
         {
             "type": "shell",
-            "label": "Build Portfolio (C++)",
+            "label": "Build Win32 GUI Application",
+            "command": "g++",
+            "args": [
+                "-std=c++11",
+                "-Wall",
+                "-O2",
+                "Win32App.cpp",
+                "Portfolio.cpp",
+                "-mwindows",
+                "-lcomctl32",
+                "-lcomdlg32",
+                "-lgdi32",
+                "-luser32",
+                "-o",
+                "portfolio_gui.exe"
+            ],
+            "options": {
+                "cwd": "${workspaceFolder}"
+            },
+            "problemMatcher": [
+                "$gcc"
+            ],
+            "group": {
+                "kind": "build",
+                "isDefault": true
+            },
+            "detail": "Compiles native Windows desktop GUI using MinGW GCC and Win32 API"
+        },
+        {
+            "type": "shell",
+            "label": "Run Win32 GUI Application",
+            "command": "${workspaceFolder}/portfolio_gui.exe",
+            "dependsOn": "Build Win32 GUI Application",
+            "group": "test",
+            "problemMatcher": [],
+            "detail": "Launches portfolio_gui.exe desktop window"
+        },
+        {
+            "type": "shell",
+            "label": "Build Portfolio (Pure C++ CLI)",
             "command": "g++",
             "args": [
                 "-std=c++11",
@@ -20,30 +59,40 @@
             "problemMatcher": [
                 "$gcc"
             ],
-            "group": {
-                "kind": "build",
-                "isDefault": true
-            },
+            "group": "build",
             "detail": "Compiles main.cpp and Portfolio.cpp into portfolio.exe using MinGW g++"
         },
         {
             "type": "shell",
-            "label": "Run Portfolio Application",
+            "label": "Run Portfolio (CLI)",
             "command": "${workspaceFolder}/portfolio.exe",
-            "dependsOn": "Build Portfolio (C++)",
+            "dependsOn": "Build Portfolio (Pure C++ CLI)",
             "group": "test",
             "problemMatcher": [],
             "detail": "Runs portfolio.exe in VS Code integrated terminal"
         },
         {
             "type": "shell",
-            "label": "Run Automated Tests",
+            "label": "Run Automated DSA Tests",
             "command": "g++ -std=c++11 -Wall -O2 test_portfolio.cpp Portfolio.cpp -o test_runner.exe && ./test_runner.exe",
             "group": "test",
             "problemMatcher": [
                 "$gcc"
             ],
-            "detail": "Compiles and executes automated test suite"
+            "detail": "Compiles and executes automated test suite (27 assertions)"
+        },
+        {
+            "type": "shell",
+            "label": "Build Qt GUI (Optional CMake)",
+            "command": "cmake -B build -G \"MinGW Makefiles\" && cmake --build build",
+            "options": {
+                "cwd": "${workspaceFolder}"
+            },
+            "group": "build",
+            "problemMatcher": [
+                "$gcc"
+            ],
+            "detail": "Builds Qt Widgets desktop GUI application if Qt and CMake are installed"
         }
     ]
 }

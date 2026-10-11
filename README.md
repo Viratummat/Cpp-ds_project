@@ -1,96 +1,100 @@
-# Stock Portfolio Management System (C++)
+# Stock Portfolio Management System (C++ Win32 Desktop GUI & CLI)
 
-A high-performance, polished, native **C++ Stock Portfolio Management System** designed with classical Data Structures and Algorithms (**Array + Singly Linked List + Selection Sort**).
+A high-performance, polished, native **C++ Stock Portfolio Management System** featuring a modern **Native Windows Desktop GUI (Win32 API)** and an interactive **Terminal / Console interface**, powered by classical Data Structures and Algorithms (**Array + Singly Linked List + Selection Sort**).
+
+**Zero external dependencies:** Runs completely with the existing **MinGW GCC 6.3.0** compiler already installed on Windows. No Qt, no Python, no Node.js, and no external GUI frameworks are required.
 
 ---
 
-## 📋 Project Overview & Architecture
+## 📋 Architecture & Core Data Structures
 
-This system is written entirely in **standard C++** and relies solely on the C++ Standard Library. It provides full user and investment portfolio tracking with native file persistence and defensive input handling.
+The application maintains a strict separation of concerns between core DSA business logic (`Portfolio.h`, `Portfolio.cpp`), the native Windows GUI (`Win32App.cpp`), and the console interface (`main.cpp`).
 
 ### Core Data Structures
 1. **User Array (`User users[MAX_USERS]`):**
-   - Stores up to `100` registered user profiles.
-   - Fixed-size array with `userCount` tracking active accounts.
+   - Fixed-size array accommodating up to `100` registered investor profiles.
    - Linear search `findUser(string id)` for $O(n)$ unique ID lookup.
 2. **Holdings Singly Linked List (`Investment* head`):**
    - Each `User` structure holds a head pointer to a dynamically allocated linked list of stock holdings (`Investment`).
-   - Dynamic node allocation (`new Investment`) ensures memory efficiency.
-   - Linear search `findInvestment(User& user, string stockName)` traverses the list in $O(k)$ time.
+   - Dynamic node allocation (`new Investment`) ensures optimal memory usage.
 3. **Selection Sort Algorithm ($O(k^2)$):**
-   - Implemented from scratch on the linked list (no library `std::sort()`).
+   - Custom implementations from scratch without library `std::sort()`:
+     - `selectionSort(Investment* head, bool descending)`: Sorts a cloned copy of a user's stock holdings.
+     - `selectionSortUsers(UserRankingItem items[], int count, bool descending)`: Sorts user accounts by total capital invested.
    - Supports both **Descending** (Highest to Lowest) and **Ascending** (Lowest to Highest) sorting directions.
-   - **Non-mutating:** Deep copies the user's linked list before sorting, preserving the original portfolio order and preventing corruption.
-   - Stable tie-breaker: Secondary alphabetical comparison on stock symbols.
+   - **Non-mutating:** Deep copies the user's linked list before sorting, preserving the original portfolio sequence and preventing memory corruption.
 4. **Weighted-Average Acquisition Price Merge:**
-   - When adding additional shares of an already-owned stock, repeated purchases are merged automatically:
+   - Repeated purchases of the same stock symbol are merged automatically:
      $$\text{New Quantity} = \text{Old Quantity} + \text{Additional Quantity}$$
      $$\text{New Total Invested} = \text{Old Total Invested} + (\text{Additional Quantity} \times \text{New Purchase Price})$$
      $$\text{New Average Price} = \frac{\text{New Total Invested}}{\text{New Quantity}}$$
 
 ---
 
-## 🛠️ Compilation & Execution
+## 🖥️ User Interfaces
 
-### Prerequisites
-- Any standard C++ compiler supporting C++11 or higher (MinGW GCC `g++`, MSVC `cl.exe`, or Clang).
+### 1. Modern Native Windows Desktop Application (`portfolio_gui.exe`)
+Built with standard **Win32 API** (`windows.h`, `commctrl.h`):
+- **Obsidian Dark Fintech Theme:** Professional financial palette (`#0B0F19` background, `#161E31` card panels, `#7C3AED` purple accent, `#10B981` emerald green gains).
+- **Sidebar Navigation:**
+  - 📊 **Dashboard:** Stat cards (Total Capital Invested, Active Accounts, Stocks Monitored, Top Portfolio Holding) and dynamic Top Holdings table.
+  - 👥 **Users:** User directory, Add User modal dialog, Edit User Name, Delete User (with linked-list deallocation and confirmation dialog), and live search filter.
+  - 💼 **Portfolio:** Account dropdown selector, portfolio metrics, holdings table with Allocation (%), Add Investment dialog (with auto-uppercase tickers and weighted-average acquisition price merge), Edit, and Delete holding.
+  - 🏆 **Selection Sort:** Dynamic ranking table with radio toggle for **Descending (Highest to Lowest)** and **Ascending (Lowest to Highest)**, view toggle between User Accounts and Individual Stock Holdings.
+  - 🔍 **Search:** Instant User ID or Name lookup with dedicated card view and holdings summary.
+  - 💾 **Data & Backup:** Persistence status, manual save/reload, file backup export, and restore with validation.
+- **Fluid Resizing:** Adjusts layout automatically on window resize (`WM_SIZE`).
+- **Clean Empty State:** Shows clean empty state if no saved data exists; never seeds fake or prefilled demo users.
 
-### 1. Build Using Windows Batch File
-```cmd
-build.bat
-```
-
-### 2. Build Using `g++` Directly
-```bash
-g++ -std=c++11 -Wall -O2 main.cpp Portfolio.cpp -o portfolio.exe
-```
-
-### 3. Run the Application
-```cmd
-portfolio.exe
-```
-
-### 4. Run Automated Test Suite
-```bash
-g++ -std=c++11 -Wall -O2 test_portfolio.cpp Portfolio.cpp -o test_runner.exe
-test_runner.exe
-```
+### 2. Interactive Console Application (`portfolio.exe`)
+- Complete ASCII-formatted interactive menu with tables, color indicators, and numeric option prompts.
 
 ---
 
-## 🚀 Implemented Features
+## 🛠️ Build and Execution Guide
 
-### 1. User Management
-- **Add New User:** Rejects duplicate User IDs, supports full names with spaces, enforces maximum user limit ($100$).
-- **View All Users:** Formatted tabular view displaying User ID, Full Name, Holdings Count, and Total Invested.
-- **Search User by ID:** Instant lookup matching the C++ `findUser()` array search.
-- **Edit User Name:** Safely updates user name.
-- **Delete User:** Unlinks and deallocates all linked-list nodes in the user's portfolio and shifts array records cleanly.
+### 1. Build and Run via `build.bat` (Recommended)
+Double-click or run `build.bat` in Command Prompt:
+```cmd
+build.bat
+```
+Select from the interactive menu:
+- `[1]` Build Native Win32 GUI (`portfolio_gui.exe`) [DEFAULT]
+- `[2]` Build Console Application (`portfolio.exe`)
+- `[3]` Run Automated DSA Test Suite (`test_runner.exe`)
+- `[4]` Build Everything (GUI + Console + Tests)
+- `[5]` Build and Launch Win32 GUI Application
 
-### 2. Investment Management
-- **Add / Merge Stock:** Validates positive integer quantities and positive prices. Automatically merges duplicate stocks using weighted-average pricing.
-- **Edit Stock Holding:** Modifies quantity and purchase price, recalculating total acquisition costs.
-- **Delete Stock Holding:** Unlinks and deletes the specific linked-list node with user confirmation.
-- **View User Portfolio:** Displays formatted table with columns: `Stock`, `Quantity`, `Avg Price`, `Invested`, `Allocation (%)`.
-- **Search Stock in Portfolio:** Searches for a stock symbol within a selected user's holdings.
+### 2. Build Directly via Command Line (MinGW GCC)
+- **Compile Win32 GUI:**
+  ```cmd
+  g++ -std=c++11 -Wall -O2 Win32App.cpp Portfolio.cpp -mwindows -lcomctl32 -lcomdlg32 -lgdi32 -luser32 -o portfolio_gui.exe
+  ```
+- **Launch Win32 GUI:**
+  ```cmd
+  portfolio_gui.exe
+  ```
 
-### 3. Investment Ranking (Selection Sort)
-- **Submenu with Sorting Directions:**
-  1. `Sort by Investment -- Descending (Highest to Lowest)` (Rank 1 = largest investment).
-  2. `Sort by Investment -- Ascending  (Lowest to Highest)` (Rank 1 = smallest investment).
-  3. `Return to Main Menu`.
-- **Display:** Shows Rank ($1, 2, 3\dots$), Stock Name, Quantity, Average Price, Total Invested, Allocation (%), plus Highest and Lowest investments.
-- **Safe:** Sorts a cloned copy so the user's original linked-list sequence is never corrupted.
+- **Compile Console Version:**
+  ```cmd
+  g++ -std=c++11 -Wall -O2 main.cpp Portfolio.cpp -o portfolio.exe
+  ```
+- **Launch Console Version:**
+  ```cmd
+  portfolio.exe
+  ```
 
-### 4. Portfolio Analytics
-- **Individual User Analytics:** Total invested, distinct stocks held, average cost per holding, largest investment, smallest investment, and highest-allocation asset.
-- **System-Wide Analytics:** Total registered users, total active holdings across all portfolios, total capital invested, and top portfolio account.
+- **Compile and Run Automated Tests:**
+  ```cmd
+  g++ -std=c++11 -Wall -O2 test_portfolio.cpp Portfolio.cpp -o test_runner.exe
+  test_runner.exe
+  ```
 
-### 5. File Persistence & Backup / Restore
-- **Auto-Load on Startup:** Automatically loads saved records from `portfolio_data.txt` if present. If no file exists, starts cleanly with 0 users.
-- **Auto-Save on Changes & Exit:** Automatically updates `portfolio_data.txt` upon record mutations and clean application shutdown.
-- **Export Data Backup:** Exports records to a custom backup file (`portfolio_backup.txt`).
-- **Restore from Backup:** Validates file structure before applying changes, confirms before overwriting, and protects current state if restoration fails.
+### 3. Build & Run in Visual Studio Code
+- **Build GUI:** Press `Ctrl + Shift + B` and choose **"Build Win32 GUI Application"** (set as default).
+- **Run GUI:** Press `Ctrl + F5` or run task **"Run Win32 GUI Application"**.
+- **Debug:** Press `F5` using the configuration **"Debug Win32 GUI Application"**.
+- **Console Version:** Run task **"Build Portfolio (Pure C++ CLI)"** and **"Run Portfolio (CLI)"**.
 
 ---
 
@@ -98,9 +102,13 @@ test_runner.exe
 
 | File | Description |
 | :--- | :--- |
-| `Portfolio.h` | Header file defining `Investment`, `User`, constants (`MAX_USERS`), and function prototypes. |
-| `Portfolio.cpp` | Implementation of linked list operations, Selection Sort (Asc/Desc), calculations, file I/O, and input validation. |
-| `main.cpp` | Entry point containing the interactive console menu system. |
-| `test_portfolio.cpp` | Automated test suite verifying all DSA operations, calculations, sorting, and persistence. |
-| `build.bat` | Windows batch script for one-click compilation. |
-| `Makefile` | Standard Makefile for build automation. |
+| `Win32App.cpp` | Complete native Windows GUI implementation using Win32 API and Common Controls. |
+| `Portfolio.h` | Header file defining `Investment`, `User`, constants (`MAX_USERS`), and core DSA API functions. |
+| `Portfolio.cpp` | Pure C++ core implementation of linked lists, Selection Sort (Asc/Desc), calculations, validation, and file I/O. |
+| `main.cpp` | Entrypoint for the interactive console menu application. |
+| `test_portfolio.cpp`| Comprehensive test suite verifying all core DSA assertions. |
+| `build.bat` | Universal Windows batch script checking compiler & environment. |
+| `.vscode/tasks.json` | VS Code task definitions for Win32 GUI, Console, and Tests. |
+| `.vscode/launch.json`| VS Code GDB debug configurations for Win32 GUI and Console CLI. |
+| `portfolio_data.txt` | Persistent text file storing serialized user and portfolio records. |
+| `MainWindow.h / .cpp`| (Preserved) Qt Widgets implementation for future reference if Qt is ever installed. |

@@ -31,7 +31,6 @@ string formatCurrency(double amount)
 
 // ============================================================
 // INPUT VALIDATION HELPERS
-// Robust against invalid non-numeric characters and empty strings
 // ============================================================
 
 int getValidInt(const string& prompt, int minVal, int maxVal)
@@ -44,7 +43,6 @@ int getValidInt(const string& prompt, int minVal, int maxVal)
         {
             if (value >= minVal && value <= maxVal)
             {
-                // Discard trailing newline
                 cin.ignore(numeric_limits<streamsize>::max(), '\n');
                 return value;
             }
@@ -100,7 +98,6 @@ string getValidString(const string& prompt, bool allowSpaces)
             cin.ignore(numeric_limits<streamsize>::max(), '\n');
         }
 
-        // Trim leading and trailing whitespace
         size_t start = input.find_first_not_of(" \t\r\n");
         size_t end = input.find_last_not_of(" \t\r\n");
 
@@ -155,7 +152,6 @@ void cleanupAllMemory()
     userCount = 0;
 }
 
-// Deep copy linked list to perform non-mutating operations
 Investment* copyList(const Investment* head)
 {
     if (head == nullptr)
@@ -185,7 +181,6 @@ Investment* copyList(const Investment* head)
 // CORE LOOKUP & CALCULATIONS
 // ============================================================
 
-// Linear search in users array
 int findUser(const string& id)
 {
     string searchId = toUpperCase(id);
@@ -199,7 +194,6 @@ int findUser(const string& id)
     return -1;
 }
 
-// Linear search in user's linked list
 Investment* findInvestment(User& user, const string& stockName)
 {
     string targetStock = toUpperCase(stockName);
@@ -217,7 +211,6 @@ Investment* findInvestment(User& user, const string& stockName)
     return nullptr;
 }
 
-// Calculate total portfolio investment for a user
 double calculateTotal(const User& user)
 {
     double total = 0.0;
@@ -232,7 +225,6 @@ double calculateTotal(const User& user)
     return total;
 }
 
-// Count number of holdings in a user's linked list
 int countHoldings(const User& user)
 {
     int count = 0;
@@ -248,7 +240,252 @@ int countHoldings(const User& user)
 }
 
 // ============================================================
-// USER MANAGEMENT
+// CORE PROGRAMMATIC API (UI INDEPENDENT)
+// ============================================================
+
+bool registerUserCore(const string& id, const string& name, string& outError)
+{
+    if (userCount >= MAX_USERS)
+    {
+        outError = "Maximum user capacity of 100 has been reached.";
+        return false;
+    }
+
+    string cleanId = id;
+    size_t s = cleanId.find_first_not_of(" \t\r\n");
+    size_t e = cleanId.find_last_not_of(" \t\r\n");
+    if (s == string::npos || e == string::npos)
+    {
+        outError = "User ID cannot be empty.";
+        return false;
+    }
+    cleanId = cleanId.substr(s, e - s + 1);
+
+    if (findUser(cleanId) != -1)
+    {
+        outError = "User ID \"" + cleanId + "\" already exists. Please choose a unique ID.";
+        return false;
+    }
+
+    string cleanName = name;
+    s = cleanName.find_first_not_of(" \t\r\n");
+    e = cleanName.find_last_not_of(" \t\r\n");
+    if (s == string::npos || e == string::npos)
+    {
+        outError = "User name cannot be empty.";
+        return false;
+    }
+    cleanName = cleanName.substr(s, e - s + 1);
+
+    users[userCount].userID = cleanId;
+    users[userCount].name = cleanName;
+    users[userCount].head = nullptr;
+    userCount++;
+
+    saveToFile();
+    return true;
+}
+
+bool editUserNameCore(const string& id, const string& newName, string& outError)
+{
+    int idx = findUser(id);
+    if (idx == -1)
+    {
+        outError = "User ID not found.";
+        return false;
+    }
+
+    string cleanName = newName;
+    size_t s = cleanName.find_first_not_of(" \t\r\n");
+    size_t e = cleanName.find_last_not_of(" \t\r\n");
+    if (s == string::npos || e == string::npos)
+    {
+        outError = "User name cannot be empty.";
+        return false;
+    }
+    cleanName = cleanName.substr(s, e - s + 1);
+
+    users[idx].name = cleanName;
+    saveToFile();
+    return true;
+}
+
+bool deleteUserCore(const string& id, string& outError)
+{
+    int index = findUser(id);
+    if (index == -1)
+    {
+        outError = "User ID not found.";
+        return false;
+    }
+
+    clearInvestments(users[index]);
+
+    for (int i = index; i < userCount - 1; ++i)
+    {
+        users[i] = users[i + 1];
+    }
+
+    users[userCount - 1].userID = "";
+    users[userCount - 1].name = "";
+    users[userCount - 1].head = nullptr;
+
+    userCount--;
+    saveToFile();
+    return true;
+}
+
+bool addInvestmentCore(const string& userId, const string& stock, int qty, double price, string& outMsg, string& outError)
+{
+    int idx = findUser(userId);
+    if (idx == -1)
+    {
+        outError = "User not found.";
+        return false;
+    }
+
+    string cleanStock = toUpperCase(stock);
+    size_t s = cleanStock.find_first_not_of(" \t\r\n");
+    size_t e = cleanStock.find_last_not_of(" \t\r\n");
+    if (s == string::npos || e == string::npos)
+    {
+        outError = "Stock symbol cannot be empty.";
+        return false;
+    }
+    cleanStock = cleanStock.substr(s, e - s + 1);
+
+    if (qty <= 0)
+    {
+        outError = "Quantity must be a positive integer greater than 0.";
+        return false;
+    }
+    if (price <= 0.0)
+    {
+        outError = "Purchase price must be greater than 0.";
+        return false;
+    }
+
+    User& user = users[idx];
+    Investment* existing = findInvestment(user, cleanStock);
+
+    if (existing != nullptr)
+    {
+        // Weighted average formula
+        existing->totalInvested += (qty * price);
+        existing->quantity += qty;
+        existing->price = existing->totalInvested / existing->quantity;
+
+        stringstream ss;
+        ss << "Merged with existing " << cleanStock << " holding. New total: " 
+           << existing->quantity << " shares @ " << formatCurrency(existing->price) 
+           << " (" << formatCurrency(existing->totalInvested) << ")";
+        outMsg = ss.str();
+    }
+    else
+    {
+        Investment* node = new Investment(cleanStock, qty, price);
+        if (user.head == nullptr)
+        {
+            user.head = node;
+        }
+        else
+        {
+            Investment* curr = user.head;
+            while (curr->next != nullptr)
+            {
+                curr = curr->next;
+            }
+            curr->next = node;
+        }
+
+        stringstream ss;
+        ss << "Added " << cleanStock << " (" << qty << " shares @ " << formatCurrency(price) 
+           << ") = " << formatCurrency(node->totalInvested);
+        outMsg = ss.str();
+    }
+
+    saveToFile();
+    return true;
+}
+
+bool editInvestmentCore(const string& userId, const string& stock, int newQty, double newPrice, string& outError)
+{
+    int idx = findUser(userId);
+    if (idx == -1)
+    {
+        outError = "User not found.";
+        return false;
+    }
+    if (newQty <= 0)
+    {
+        outError = "Quantity must be greater than 0.";
+        return false;
+    }
+    if (newPrice <= 0.0)
+    {
+        outError = "Price must be greater than 0.";
+        return false;
+    }
+
+    User& user = users[idx];
+    Investment* holding = findInvestment(user, stock);
+    if (holding == nullptr)
+    {
+        outError = "Holding not found.";
+        return false;
+    }
+
+    holding->quantity = newQty;
+    holding->price = newPrice;
+    holding->totalInvested = newQty * newPrice;
+
+    saveToFile();
+    return true;
+}
+
+bool deleteInvestmentCore(const string& userId, const string& stock, string& outError)
+{
+    int idx = findUser(userId);
+    if (idx == -1)
+    {
+        outError = "User not found.";
+        return false;
+    }
+
+    User& user = users[idx];
+    string cleanStock = toUpperCase(stock);
+
+    Investment* curr = user.head;
+    Investment* prev = nullptr;
+
+    while (curr != nullptr && toUpperCase(curr->stockName) != cleanStock)
+    {
+        prev = curr;
+        curr = curr->next;
+    }
+
+    if (curr == nullptr)
+    {
+        outError = "Stock holding not found.";
+        return false;
+    }
+
+    if (prev == nullptr)
+    {
+        user.head = curr->next;
+    }
+    else
+    {
+        prev->next = curr->next;
+    }
+
+    delete curr;
+    saveToFile();
+    return true;
+}
+
+// ============================================================
+// CONSOLE INTERACTIVE OPERATIONS
 // ============================================================
 
 void addUser()
@@ -257,31 +494,18 @@ void addUser()
     cout << "                     ADD NEW USER\n";
     cout << "------------------------------------------------------------\n";
 
-    if (userCount >= MAX_USERS)
-    {
-        cout << "[Warning] Maximum capacity of " << MAX_USERS << " users reached.\n";
-        return;
-    }
-
     string id = getValidString("Enter Unique User ID: ");
-
-    // Check duplicate User ID (case-insensitive)
-    if (findUser(id) != -1)
-    {
-        cout << "[Error] User ID \"" << id << "\" already exists. ID must be unique.\n";
-        return;
-    }
-
     string name = getValidString("Enter Full Name (spaces supported): ", true);
 
-    users[userCount].userID = id;
-    users[userCount].name = name;
-    users[userCount].head = nullptr;
-
-    userCount++;
-
-    saveToFile();
-    cout << "[Success] User \"" << name << "\" (ID: " << id << ") registered successfully.\n";
+    string err;
+    if (registerUserCore(id, name, err))
+    {
+        cout << "[Success] User \"" << name << "\" (ID: " << id << ") registered successfully.\n";
+    }
+    else
+    {
+        cout << "[Error] " << err << "\n";
+    }
 }
 
 void viewAllUsers()
@@ -370,21 +594,24 @@ void editUserName()
 
     string id = getValidString("Enter User ID to edit: ");
     int index = findUser(id);
-
     if (index == -1)
     {
         cout << "[Error] User not found.\n";
         return;
     }
 
-    User& user = users[index];
-    cout << "Current Name: " << user.name << "\n";
-
+    cout << "Current Name: " << users[index].name << "\n";
     string newName = getValidString("Enter New Full Name: ", true);
-    user.name = newName;
 
-    saveToFile();
-    cout << "[Success] User ID \"" << user.userID << "\" name updated to \"" << newName << "\".\n";
+    string err;
+    if (editUserNameCore(id, newName, err))
+    {
+        cout << "[Success] User ID \"" << id << "\" name updated to \"" << newName << "\".\n";
+    }
+    else
+    {
+        cout << "[Error] " << err << "\n";
+    }
 }
 
 void deleteUser()
@@ -401,7 +628,6 @@ void deleteUser()
 
     string id = getValidString("Enter User ID to delete: ");
     int index = findUser(id);
-
     if (index == -1)
     {
         cout << "[Error] User not found.\n";
@@ -410,39 +636,25 @@ void deleteUser()
 
     User& user = users[index];
     int holdings = countHoldings(user);
-
-    cout << "Selected User: " << user.name << " (ID: " << user.userID << ") with " << holdings << " stock holdings.\n";
+    cout << "Selected User: " << user.name << " (ID: " << user.userID << ") with " << holdings << " holdings.\n";
     char confirm = getConfirmation("Are you sure you want to permanently delete this user and portfolio?");
 
     if (confirm != 'y')
     {
-        cout << "[Cancelled] User deletion cancelled.\n";
+        cout << "[Cancelled] Deletion cancelled.\n";
         return;
     }
 
-    // Free memory of user's linked list
-    clearInvestments(user);
-
-    // Shift array elements left
-    for (int i = index; i < userCount - 1; ++i)
+    string err;
+    if (deleteUserCore(id, err))
     {
-        users[i] = users[i + 1];
+        cout << "[Success] User and their portfolio were successfully deleted.\n";
     }
-
-    // Clear last slot
-    users[userCount - 1].userID = "";
-    users[userCount - 1].name = "";
-    users[userCount - 1].head = nullptr;
-
-    userCount--;
-
-    saveToFile();
-    cout << "[Success] User and their portfolio were successfully deleted.\n";
+    else
+    {
+        cout << "[Error] " << err << "\n";
+    }
 }
-
-// ============================================================
-// INVESTMENT MANAGEMENT
-// ============================================================
 
 void addInvestment()
 {
@@ -457,66 +669,19 @@ void addInvestment()
     }
 
     string id = getValidString("Enter User ID: ");
-    int index = findUser(id);
-
-    if (index == -1)
-    {
-        cout << "[Error] User not found.\n";
-        return;
-    }
-
-    User& user = users[index];
-    string stock = toUpperCase(getValidString("Enter Stock Symbol/Name (e.g., TCS, RELIANCE): "));
+    string stock = getValidString("Enter Stock Symbol/Name (e.g. TCS): ");
     int quantity = getValidInt("Enter Quantity of Shares (> 0): ", 1, 10000000);
     double price = getValidDouble("Enter Purchase Price per Share (> 0): ", 0.01, 100000000.0);
 
-    // Check if user already owns this stock
-    Investment* existing = findInvestment(user, stock);
-
-    if (existing != nullptr)
+    string msg, err;
+    if (addInvestmentCore(id, stock, quantity, price, msg, err))
     {
-        cout << "\n[Info] User already owns " << existing->quantity << " shares of " << stock 
-             << " @ " << formatCurrency(existing->price) << ".\n";
-
-        // Weighted-average calculation
-        double oldTotal = existing->totalInvested;
-        int oldQty = existing->quantity;
-
-        existing->totalInvested += (quantity * price);
-        existing->quantity += quantity;
-        existing->price = existing->totalInvested / existing->quantity;
-
-        cout << "[Success] Existing stock holding merged using weighted-average price:\n";
-        cout << "  - Previous: " << oldQty << " shares @ " << formatCurrency(oldTotal / oldQty) << "\n";
-        cout << "  - Added   : " << quantity << " shares @ " << formatCurrency(price) << "\n";
-        cout << "  - Updated : " << existing->quantity << " shares @ " << formatCurrency(existing->price) 
-             << " (Total: " << formatCurrency(existing->totalInvested) << ")\n";
-
-        saveToFile();
-        return;
-    }
-
-    // New holding node
-    Investment* newInvestment = new Investment(stock, quantity, price);
-
-    if (user.head == nullptr)
-    {
-        user.head = newInvestment;
+        cout << "[Success] " << msg << "\n";
     }
     else
     {
-        Investment* current = user.head;
-        while (current->next != nullptr)
-        {
-            current = current->next;
-        }
-        current->next = newInvestment;
+        cout << "[Error] " << err << "\n";
     }
-
-    saveToFile();
-    cout << "[Success] New investment added to " << user.name << "'s portfolio:\n";
-    cout << "  " << stock << ": " << quantity << " shares @ " << formatCurrency(price) 
-         << " = " << formatCurrency(newInvestment->totalInvested) << "\n";
 }
 
 void editInvestment()
@@ -532,44 +697,19 @@ void editInvestment()
     }
 
     string id = getValidString("Enter User ID: ");
-    int index = findUser(id);
-
-    if (index == -1)
-    {
-        cout << "[Error] User not found.\n";
-        return;
-    }
-
-    User& user = users[index];
-    if (user.head == nullptr)
-    {
-        cout << "[Info] No holdings found in this user's portfolio.\n";
-        return;
-    }
-
-    string stock = toUpperCase(getValidString("Enter Stock Symbol to edit: "));
-    Investment* holding = findInvestment(user, stock);
-
-    if (holding == nullptr)
-    {
-        cout << "[Error] Stock \"" << stock << "\" not found in user's portfolio.\n";
-        return;
-    }
-
-    cout << "\nCurrent Details for " << holding->stockName << ":\n";
-    cout << "  Quantity : " << holding->quantity << "\n";
-    cout << "  Avg Price: " << formatCurrency(holding->price) << "\n";
-    cout << "  Total    : " << formatCurrency(holding->totalInvested) << "\n\n";
-
+    string stock = getValidString("Enter Stock Symbol to edit: ");
     int newQty = getValidInt("Enter New Quantity: ", 1, 10000000);
     double newPrice = getValidDouble("Enter New Average Price per Share: ", 0.01, 100000000.0);
 
-    holding->quantity = newQty;
-    holding->price = newPrice;
-    holding->totalInvested = newQty * newPrice;
-
-    saveToFile();
-    cout << "[Success] Holding updated successfully. New total: " << formatCurrency(holding->totalInvested) << "\n";
+    string err;
+    if (editInvestmentCore(id, stock, newQty, newPrice, err))
+    {
+        cout << "[Success] Holding updated successfully.\n";
+    }
+    else
+    {
+        cout << "[Error] " << err << "\n";
+    }
 }
 
 void deleteInvestment()
@@ -585,61 +725,24 @@ void deleteInvestment()
     }
 
     string id = getValidString("Enter User ID: ");
-    int index = findUser(id);
-
-    if (index == -1)
-    {
-        cout << "[Error] User not found.\n";
-        return;
-    }
-
-    User& user = users[index];
-    if (user.head == nullptr)
-    {
-        cout << "[Info] No holdings found in this user's portfolio.\n";
-        return;
-    }
-
-    string stock = toUpperCase(getValidString("Enter Stock Symbol to delete: "));
-
-    Investment* current = user.head;
-    Investment* prev = nullptr;
-
-    while (current != nullptr && toUpperCase(current->stockName) != stock)
-    {
-        prev = current;
-        current = current->next;
-    }
-
-    if (current == nullptr)
-    {
-        cout << "[Error] Stock \"" << stock << "\" not found in user's portfolio.\n";
-        return;
-    }
-
-    cout << "Found: " << current->stockName << " (" << current->quantity << " shares, " 
-         << formatCurrency(current->totalInvested) << ")\n";
+    string stock = getValidString("Enter Stock Symbol to delete: ");
 
     char confirm = getConfirmation("Are you sure you want to remove this stock from the portfolio?");
     if (confirm != 'y')
     {
-        cout << "[Cancelled] Holding deletion cancelled.\n";
+        cout << "[Cancelled] Deletion cancelled.\n";
         return;
     }
 
-    if (prev == nullptr)
+    string err;
+    if (deleteInvestmentCore(id, stock, err))
     {
-        user.head = current->next;
+        cout << "[Success] Stock \"" << stock << "\" removed from portfolio.\n";
     }
     else
     {
-        prev->next = current->next;
+        cout << "[Error] " << err << "\n";
     }
-
-    delete current;
-
-    saveToFile();
-    cout << "[Success] Stock \"" << stock << "\" removed from portfolio.\n";
 }
 
 void searchStockInPortfolio()
@@ -874,7 +977,6 @@ void viewOverallSystemAnalytics()
 
 // ============================================================
 // SELECTION SORT (ASCENDING AND DESCENDING)
-// Pure Selection Sort on Linked List without std::sort
 // ============================================================
 
 void selectionSort(Investment* head, bool descending)
@@ -890,14 +992,12 @@ void selectionSort(Investment* head, bool descending)
         {
             if (descending)
             {
-                // Find node with MAXIMUM investment
                 if (search->totalInvested > targetNode->totalInvested)
                 {
                     targetNode = search;
                 }
                 else if (fabs(search->totalInvested - targetNode->totalInvested) < 1e-6)
                 {
-                    // Stable tie-breaker: alphabetical order
                     if (search->stockName < targetNode->stockName)
                     {
                         targetNode = search;
@@ -906,14 +1006,12 @@ void selectionSort(Investment* head, bool descending)
             }
             else
             {
-                // Find node with MINIMUM investment
                 if (search->totalInvested < targetNode->totalInvested)
                 {
                     targetNode = search;
                 }
                 else if (fabs(search->totalInvested - targetNode->totalInvested) < 1e-6)
                 {
-                    // Stable tie-breaker: alphabetical order
                     if (search->stockName < targetNode->stockName)
                     {
                         targetNode = search;
@@ -924,7 +1022,6 @@ void selectionSort(Investment* head, bool descending)
             search = search->next;
         }
 
-        // Swap node data (preserving linked list topology)
         if (targetNode != current)
         {
             swap(current->stockName, targetNode->stockName);
@@ -937,6 +1034,50 @@ void selectionSort(Investment* head, bool descending)
     }
 }
 
+void selectionSortUsers(UserRankingItem items[], int count, bool descending)
+{
+    for (int i = 0; i < count - 1; ++i)
+    {
+        int targetIdx = i;
+        for (int j = i + 1; j < count; ++j)
+        {
+            if (descending)
+            {
+                if (items[j].totalInvested > items[targetIdx].totalInvested)
+                {
+                    targetIdx = j;
+                }
+                else if (fabs(items[j].totalInvested - items[targetIdx].totalInvested) < 1e-6)
+                {
+                    if (items[j].name < items[targetIdx].name)
+                    {
+                        targetIdx = j;
+                    }
+                }
+            }
+            else
+            {
+                if (items[j].totalInvested < items[targetIdx].totalInvested)
+                {
+                    targetIdx = j;
+                }
+                else if (fabs(items[j].totalInvested - items[targetIdx].totalInvested) < 1e-6)
+                {
+                    if (items[j].name < items[targetIdx].name)
+                    {
+                        targetIdx = j;
+                    }
+                }
+            }
+        }
+
+        if (targetIdx != i)
+        {
+            swap(items[i], items[targetIdx]);
+        }
+    }
+}
+
 void displaySortedHoldings(const User& user, bool descending)
 {
     if (user.head == nullptr)
@@ -945,10 +1086,7 @@ void displaySortedHoldings(const User& user, bool descending)
         return;
     }
 
-    // Deep copy linked list to avoid corrupting user's original portfolio sequence
     Investment* copyHead = copyList(user.head);
-
-    // Perform Selection Sort on the copied list
     selectionSort(copyHead, descending);
 
     double totalPortfolio = calculateTotal(user);
@@ -1024,7 +1162,6 @@ void displaySortedHoldings(const User& user, bool descending)
 
     cout << "=========================================================================\n";
 
-    // Clean up temporary copied linked list
     clearInvestments(copyHead);
 }
 
@@ -1124,7 +1261,6 @@ bool loadFromFile(const string& filename)
     ifstream inFile(filename.c_str());
     if (!inFile.is_open())
     {
-        // Missing file on startup is normal; starts in clean empty state
         return false;
     }
 
@@ -1147,9 +1283,8 @@ bool loadFromFile(const string& filename)
     }
 
     string dummy;
-    getline(inFile, dummy); // Discard trailing newline
+    getline(inFile, dummy);
 
-    // Temporary storage for validation
     User tempUsers[MAX_USERS];
 
     for (int i = 0; i < incomingUserCount; ++i)
@@ -1157,7 +1292,6 @@ bool loadFromFile(const string& filename)
         string uid, uname;
         if (!getline(inFile, uid) || !getline(inFile, uname))
         {
-            // Read failure
             for (int k = 0; k < i; ++k) clearInvestments(tempUsers[k]);
             inFile.close();
             return false;
@@ -1203,12 +1337,11 @@ bool loadFromFile(const string& filename)
                 tail = node;
             }
         }
-        getline(inFile, dummy); // Drain newline
+        getline(inFile, dummy);
     }
 
     inFile.close();
 
-    // Success: transfer validated state into active users array
     cleanupAllMemory();
     userCount = incomingUserCount;
     for (int i = 0; i < userCount; ++i)
@@ -1263,7 +1396,7 @@ void restoreBackup()
 
     if (loadFromFile(filename))
     {
-        saveToFile(); // Commit restored state to primary persistence file
+        saveToFile();
         cout << "[Success] Data restored successfully from \"" << filename << "\".\n";
         cout << "  Loaded " << userCount << " user profile(s).\n";
     }
