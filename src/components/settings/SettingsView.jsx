@@ -6,13 +6,9 @@ import {
   Trash2,
   HardDrive,
   ShieldCheck,
-  AlertTriangle,
-  RefreshCw,
   FileJson,
-  CheckCircle2,
 } from 'lucide-react';
 import { usePortfolio } from '../../context/PortfolioContext';
-import { formatNumber } from '../../utils/currency';
 
 export function SettingsView() {
   const {
@@ -21,7 +17,6 @@ export function SettingsView() {
     exportBackup,
     importBackup,
     clearAllApplicationData,
-    loadSampleDataset,
     addToast,
   } = usePortfolio();
 
@@ -73,119 +68,124 @@ export function SettingsView() {
   };
 
   return (
-    <div className="space-y-6 max-w-5xl">
+    <div className="space-y-8 max-w-5xl pb-16">
       {/* Header */}
       <div>
-        <h1 className="text-2xl font-extrabold text-white tracking-tight">
-          Data Management & Storage
+        <span className="text-[10px] font-mono tracking-[0.25em] uppercase text-purple-400 block mb-1">
+          STORAGE CONTROLS
+        </span>
+        <h1 className="text-3xl font-extrabold text-white tracking-tight">
+          Data Management
         </h1>
         <p className="text-xs text-slate-400 mt-1">
-          Browser LocalStorage persistence, backup export, and system configuration
+          Browser LocalStorage persistence, backup export, and JSON restoration
         </p>
       </div>
 
-      {/* Storage Status & Telemetry Card */}
-      <div className="fintech-card p-5 sm:p-6">
-        <div className="flex items-center gap-3 mb-4 pb-3 border-b border-[#1E293B]">
-          <div className="w-10 h-10 rounded-xl bg-emerald-950/60 border border-emerald-800/40 flex items-center justify-center text-emerald-400">
+      {/* Storage Diagnostics Card */}
+      <div className="glass-card p-5 sm:p-6">
+        <div className="flex items-center gap-3 mb-4 pb-3 border-b border-white/[0.06]">
+          <div className="w-10 h-10 rounded-xl bg-purple-950/60 border border-purple-500/30 flex items-center justify-center text-purple-400">
             <HardDrive className="w-5 h-5" />
           </div>
           <div>
-            <h3 className="text-base font-bold text-white">
-              Storage Engine Status
+            <h3 className="text-sm font-bold text-white font-mono uppercase tracking-wider">
+              Storage Engine Telemetry
             </h3>
-            <p className="text-xs text-slate-400">
-              Browser-native LocalStorage layer
+            <p className="text-[11px] text-slate-400">
+              Browser-isolated LocalStorage layer
             </p>
           </div>
           <div className="ml-auto flex items-center gap-2">
-            <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold bg-emerald-950/60 border border-emerald-800/40 text-emerald-300">
-              <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
-              {storageInfo.isAvailable ? 'Storage Active & Healthy' : 'Storage Unavailable'}
+            <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-mono font-semibold bg-white/[0.04] border border-white/10 text-purple-300">
+              <span className="w-2 h-2 rounded-full bg-purple-400 animate-pulse" />
+              {storageInfo.isAvailable ? 'Active & Healthy' : 'Unavailable'}
             </span>
           </div>
         </div>
 
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 font-mono text-xs">
-          <div className="p-3 bg-[#0B0F19] border border-[#1E293B] rounded-xl">
-            <span className="text-slate-500 block text-[11px] uppercase font-sans">Storage Key</span>
+          <div className="p-3 bg-black/40 border border-white/[0.06] rounded-xl">
+            <span className="text-slate-500 block text-[10px] uppercase font-sans">Storage Key</span>
             <span className="text-slate-200 font-bold mt-1 block truncate">
               {storageInfo.storageKey}
             </span>
           </div>
 
-          <div className="p-3 bg-[#0B0F19] border border-[#1E293B] rounded-xl">
-            <span className="text-slate-500 block text-[11px] uppercase font-sans">Data Size</span>
-            <span className="text-emerald-400 font-bold mt-1 block">
+          <div className="p-3 bg-black/40 border border-white/[0.06] rounded-xl">
+            <span className="text-slate-500 block text-[10px] uppercase font-sans">Storage Size</span>
+            <span className="text-purple-300 font-bold mt-1 block">
               {storageInfo.formattedSize}
             </span>
           </div>
 
-          <div className="p-3 bg-[#0B0F19] border border-[#1E293B] rounded-xl">
-            <span className="text-slate-500 block text-[11px] uppercase font-sans">Users Stored</span>
+          <div className="p-3 bg-black/40 border border-white/[0.06] rounded-xl">
+            <span className="text-slate-500 block text-[10px] uppercase font-sans">Registered Users</span>
             <span className="text-cyan-400 font-bold mt-1 block">
               {storageInfo.usersCount} Profiles
             </span>
           </div>
 
-          <div className="p-3 bg-[#0B0F19] border border-[#1E293B] rounded-xl">
-            <span className="text-slate-500 block text-[11px] uppercase font-sans">Holdings Stored</span>
+          <div className="p-3 bg-black/40 border border-white/[0.06] rounded-xl">
+            <span className="text-slate-500 block text-[10px] uppercase font-sans">Stock Holdings</span>
             <span className="text-amber-400 font-bold mt-1 block">
               {storageInfo.holdingsCount} Positions
             </span>
           </div>
         </div>
 
-        {/* LocalStorage Technical Explanation & Disclosure */}
-        <div className="mt-4 p-3.5 bg-[#0B0F19]/80 border border-[#1E293B] rounded-xl text-xs text-slate-400 space-y-1">
+        <div className="mt-4 p-3.5 bg-black/60 border border-white/[0.06] rounded-xl text-xs text-slate-400 space-y-1">
           <div className="flex items-center gap-1.5 text-slate-300 font-semibold">
-            <ShieldCheck className="w-4 h-4 text-emerald-400" />
-            <span>Client-Side Isolation Notice</span>
+            <ShieldCheck className="w-4 h-4 text-purple-400" />
+            <span>Client Isolation Policy</span>
           </div>
           <p className="text-[11px] leading-relaxed text-slate-400">
-            All user profiles and investment holdings are stored directly in your browser's local sandbox ({storageInfo.storageKey}). Data persists indefinitely across page reloads and browser restarts. However, because this is client-side storage, it is specific to this browser and profile and does not synchronize with external servers or separate devices. Use the JSON backup tools below to transfer data between environments.
+            All user profiles and investment holdings reside strictly in your current browser session ({storageInfo.storageKey}). Data persists across page reloads and browser restarts. Because client-side storage does not synchronize across external machines, use the JSON export tools below to back up or transfer your portfolios.
           </p>
         </div>
       </div>
 
-      {/* Backup Export and Import */}
+      {/* Backup Export and Import Grid */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         {/* Export Card */}
-        <div className="fintech-card p-5 sm:p-6 flex flex-col justify-between">
+        <div className="glass-card p-5 sm:p-6 flex flex-col justify-between">
           <div>
             <div className="flex items-center gap-2 mb-2">
-              <Download className="w-5 h-5 text-emerald-400" />
-              <h3 className="text-base font-bold text-white">Export JSON Backup</h3>
+              <Download className="w-5 h-5 text-purple-400" />
+              <h3 className="text-sm font-bold text-white uppercase tracking-wider font-mono">
+                Export JSON Backup
+              </h3>
             </div>
             <p className="text-xs text-slate-400 mb-5 leading-relaxed">
-              Export all registered users, linked holdings, weighted average prices, and system metadata into a structured JSON file.
+              Export all genuine user-created profiles, holdings, and acquisition amounts into a portable JSON backup file.
             </p>
           </div>
 
-          <div className="pt-4 border-t border-[#1E293B]">
+          <div className="pt-4 border-t border-white/[0.06]">
             <button
               onClick={exportBackup}
               disabled={users.length === 0}
-              className="w-full fintech-btn-primary !py-2.5"
+              className="w-full pill-btn-neon !text-xs !py-2.5"
             >
-              <Download className="w-4 h-4 text-slate-950" />
-              Download Backup ({users.length} Users)
+              <Download className="w-4 h-4" />
+              <span>Download Backup ({users.length} Users)</span>
             </button>
           </div>
         </div>
 
         {/* Import Card */}
-        <div className="fintech-card p-5 sm:p-6 flex flex-col justify-between">
+        <div className="glass-card p-5 sm:p-6 flex flex-col justify-between">
           <div>
             <div className="flex items-center gap-2 mb-2">
               <Upload className="w-5 h-5 text-cyan-400" />
-              <h3 className="text-base font-bold text-white">Import JSON Backup</h3>
+              <h3 className="text-sm font-bold text-white uppercase tracking-wider font-mono">
+                Import JSON Backup
+              </h3>
             </div>
             <p className="text-xs text-slate-400 mb-4 leading-relaxed">
-              Restore a previously exported backup file. Deep schema validation ensures data integrity before any updates are committed.
+              Restore a valid backup file. Strict schema validation ensures data integrity before applying changes.
             </p>
 
-            {/* Drag & Drop Area */}
             <div
               onDragOver={handleDragOver}
               onDragLeave={handleDragLeave}
@@ -193,8 +193,8 @@ export function SettingsView() {
               onClick={() => fileInputRef.current?.click()}
               className={`border-2 border-dashed rounded-xl p-5 text-center cursor-pointer transition-colors ${
                 isDragging
-                  ? 'border-emerald-400 bg-emerald-950/20'
-                  : 'border-[#273549] hover:border-slate-500 bg-[#0B0F19]'
+                  ? 'border-purple-400 bg-purple-950/20'
+                  : 'border-white/10 hover:border-purple-400/50 bg-black/40'
               }`}
             >
               <input
@@ -204,65 +204,39 @@ export function SettingsView() {
                 onChange={(e) => handleFileUpload(e.target.files[0])}
                 className="hidden"
               />
-              <FileJson className="w-8 h-8 text-slate-500 mx-auto mb-2" />
+              <FileJson className="w-7 h-7 text-slate-500 mx-auto mb-2" />
               <span className="text-xs font-semibold text-slate-300 block">
-                Click to browse or drag & drop JSON file
+                Click to browse or drop JSON backup
               </span>
               <span className="text-[10px] text-slate-500 block mt-0.5">
-                Supported format: .json
+                Format: .json
               </span>
             </div>
           </div>
         </div>
       </div>
 
-      {/* Dataset Reset & Sample Data */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        {/* Sample Dataset */}
-        <div className="fintech-card p-5 sm:p-6 flex flex-col justify-between">
-          <div>
-            <div className="flex items-center gap-2 mb-2">
-              <Database className="w-5 h-5 text-amber-400" />
-              <h3 className="text-base font-bold text-white">Load Sample Portfolio</h3>
-            </div>
-            <p className="text-xs text-slate-400 mb-4 leading-relaxed">
-              Instantly populate the system with 3 realistic investor profiles (Virat Kumar, Priya Sharma, Arjun Patel) and diversified Indian blue-chip stock portfolios (Reliance, TCS, HDFC Bank, Infosys, Tata Motors, ITC, etc.).
-            </p>
-          </div>
-
-          <div className="pt-4 border-t border-[#1E293B]">
-            <button
-              onClick={loadSampleDataset}
-              className="w-full inline-flex items-center justify-center gap-2 px-4 py-2.5 text-xs font-semibold text-amber-300 bg-amber-950/40 hover:bg-amber-900/40 border border-amber-800/50 rounded-lg transition-colors"
-            >
-              <RefreshCw className="w-4 h-4 text-amber-400" />
-              Load Realistic Indian Portfolio Dataset
-            </button>
-          </div>
+      {/* Reset Application Card */}
+      <div className="glass-card p-5 sm:p-6 border-rose-950/40">
+        <div className="flex items-center gap-2 mb-2">
+          <Trash2 className="w-5 h-5 text-rose-400" />
+          <h3 className="text-sm font-bold text-white uppercase tracking-wider font-mono">
+            Reset Application Data
+          </h3>
         </div>
+        <p className="text-xs text-slate-400 mb-4 leading-relaxed">
+          Permanently clear all user profiles and investment holdings from browser storage, returning the system to a clean empty state.
+        </p>
 
-        {/* Clear All Data */}
-        <div className="fintech-card p-5 sm:p-6 border-rose-950/50 flex flex-col justify-between">
-          <div>
-            <div className="flex items-center gap-2 mb-2">
-              <Trash2 className="w-5 h-5 text-rose-400" />
-              <h3 className="text-base font-bold text-white">Reset Application</h3>
-            </div>
-            <p className="text-xs text-slate-400 mb-4 leading-relaxed">
-              Permanently wipe all users, portfolios, and holdings from browser localStorage. Recommended if you wish to start from an empty slate.
-            </p>
-          </div>
-
-          <div className="pt-4 border-t border-[#1E293B]">
-            <button
-              onClick={clearAllApplicationData}
-              disabled={users.length === 0}
-              className="w-full fintech-btn-danger !py-2.5 !text-xs"
-            >
-              <Trash2 className="w-4 h-4" />
-              Reset All Application Data
-            </button>
-          </div>
+        <div className="pt-4 border-t border-white/[0.06]">
+          <button
+            onClick={clearAllApplicationData}
+            disabled={users.length === 0}
+            className="pill-btn-secondary !text-rose-400 hover:!text-rose-200 !border-rose-800/40 hover:!bg-rose-950/40 !text-xs !py-2.5"
+          >
+            <Trash2 className="w-4 h-4" />
+            <span>Reset All Application Data</span>
+          </button>
         </div>
       </div>
     </div>

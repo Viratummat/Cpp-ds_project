@@ -4,10 +4,8 @@ import {
   Trophy,
   Code2,
   Sparkles,
-  Info,
-  Layers,
   Wallet,
-  User,
+  FolderPlus,
 } from 'lucide-react';
 import { usePortfolio } from '../../context/PortfolioContext';
 import { selectionSortInvestments } from '../../utils/sorting';
@@ -16,7 +14,6 @@ import {
   calculateAllocationPercentage,
 } from '../../utils/calculations';
 import { formatINR, formatPercentage } from '../../utils/currency';
-import { EmptyState } from '../common/EmptyState';
 
 export function RankingView() {
   const {
@@ -25,7 +22,7 @@ export function RankingView() {
     setSelectedUserId,
     selectedUser,
     setAddHoldingModal,
-    setActiveTab,
+    setAddUserModalOpen,
   } = usePortfolio();
 
   const portfolioInvestments = useMemo(() => {
@@ -36,7 +33,7 @@ export function RankingView() {
     return calculatePortfolioTotal(portfolioInvestments);
   }, [portfolioInvestments]);
 
-  // Execute Selection Sort without Array.prototype.sort()
+  // Execute pure Selection Sort without Array.prototype.sort()
   const { sortedInvestments, stats } = useMemo(() => {
     return selectionSortInvestments(portfolioInvestments);
   }, [portfolioInvestments]);
@@ -45,59 +42,71 @@ export function RankingView() {
 
   if (users.length === 0) {
     return (
-      <div className="space-y-6">
+      <div className="space-y-8 pb-16">
         <div>
-          <h1 className="text-2xl font-extrabold text-white tracking-tight">
+          <span className="text-[10px] font-mono tracking-[0.25em] uppercase text-purple-400 block mb-1">
+            ALGORITHM TELEMETRY
+          </span>
+          <h1 className="text-3xl font-extrabold text-white tracking-tight">
             Investment Ranking
           </h1>
           <p className="text-xs text-slate-400 mt-1">
             Descending order ranking powered by Selection Sort algorithm
           </p>
         </div>
-        <EmptyState
-          icon={ArrowUpDown}
-          title="No Users Registered"
-          description="Create a user profile to test the Selection Sort investment ranking algorithm."
-          actionLabel="Create User"
-          onAction={() => setActiveTab('users')}
-          showSampleDataAction={true}
-        />
+
+        <div className="glass-card p-12 text-center border-dashed border-white/10">
+          <div className="w-16 h-16 rounded-2xl bg-white/[0.03] border border-white/10 flex items-center justify-center mx-auto mb-4 text-purple-400">
+            <FolderPlus className="w-8 h-8" />
+          </div>
+          <h3 className="text-lg font-bold text-white mb-2">
+            No users registered yet
+          </h3>
+          <p className="text-xs sm:text-sm text-slate-400 max-w-md mx-auto mb-6 leading-relaxed">
+            Register a user and add stock investments to evaluate the Selection Sort descending ranking algorithm.
+          </p>
+          <button
+            onClick={() => setAddUserModalOpen(true)}
+            className="pill-btn-neon"
+          >
+            + Register User Profile
+          </button>
+        </div>
       </div>
     );
   }
 
   return (
-    <div className="space-y-6">
-      {/* Header with User Selector */}
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 p-5 fintech-card">
-        <div className="flex items-center gap-3">
-          <div className="w-12 h-12 rounded-xl bg-amber-950/60 border border-amber-800/40 flex items-center justify-center text-amber-400 flex-shrink-0">
+    <div className="space-y-8 pb-16">
+      {/* User Switcher Header */}
+      <div className="glass-card p-5 sm:p-6 flex flex-col md:flex-row md:items-center justify-between gap-4">
+        <div className="flex items-center gap-3.5">
+          <div className="w-12 h-12 rounded-2xl bg-amber-500/10 border border-amber-500/30 flex items-center justify-center text-amber-400 flex-shrink-0">
             <Trophy className="w-6 h-6" />
           </div>
           <div>
-            <span className="text-xs font-semibold text-slate-400 uppercase tracking-wider block">
+            <span className="text-[10px] font-mono tracking-[0.2em] text-slate-400 uppercase block">
               Selection Sort Ranking For
             </span>
-            <div className="flex items-center gap-2 mt-0.5">
-              <span className="text-lg font-bold text-white">
+            <div className="flex items-center gap-2.5 mt-0.5">
+              <span className="text-xl font-bold text-white">
                 {selectedUser?.name}
               </span>
-              <span className="font-mono text-xs font-bold text-emerald-400 bg-[#0B0F19] px-2 py-0.5 rounded border border-[#1E293B]">
+              <span className="font-mono text-xs font-bold text-purple-300 bg-purple-950/50 px-2 py-0.5 rounded border border-purple-800/40">
                 ID: {selectedUser?.userID}
               </span>
             </div>
           </div>
         </div>
 
-        {/* User dropdown switcher */}
         <div className="flex items-center gap-3">
           <select
             value={selectedUserId || ''}
             onChange={(e) => setSelectedUserId(e.target.value)}
-            className="fintech-input text-xs font-semibold min-w-[200px]"
+            className="cosmic-input !w-auto text-xs font-mono font-semibold"
           >
             {users.map((u) => (
-              <option key={u.userID} value={u.userID} className="bg-[#111827] text-white">
+              <option key={u.userID} value={u.userID} className="bg-[#0B0D14] text-white">
                 {u.name} ({u.userID}) — {u.investments?.length || 0} stocks
               </option>
             ))}
@@ -105,49 +114,46 @@ export function RankingView() {
         </div>
       </div>
 
-      {/* Educational Selection Sort Algorithm Banner */}
-      <div className="p-4 sm:p-5 bg-[#0E1524] border border-emerald-500/30 rounded-xl relative overflow-hidden">
+      {/* Selection Sort Telemetry Banner */}
+      <div className="glass-card p-5 border-purple-500/30 bg-purple-950/[0.15]">
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-2">
           <div className="flex items-center gap-2">
-            <Code2 className="w-4 h-4 text-emerald-400" />
-            <h3 className="text-sm font-bold text-white tracking-tight">
-              Algorithm: Selection Sort (Non-Mutating Descending Order)
+            <Code2 className="w-4 h-4 text-purple-400" />
+            <h3 className="text-xs font-bold text-white uppercase tracking-wider font-mono">
+              Selection Sort Engine (O(n²) Descending)
             </h3>
           </div>
-          <div className="flex items-center gap-3 font-mono text-xs text-slate-400">
-            <span>Complexity: <strong className="text-emerald-400">O(n²)</strong></span>
-            <span>Comparisons: <strong className="text-cyan-400">{stats.comparisons}</strong></span>
-            <span>Swaps: <strong className="text-amber-400">{stats.swaps}</strong></span>
+          <div className="flex items-center gap-4 font-mono text-xs text-slate-400">
+            <span>Complexity: <strong className="text-purple-300">O(n²)</strong></span>
+            <span>Comparisons: <strong className="text-cyan-300">{stats.comparisons}</strong></span>
+            <span>Swaps: <strong className="text-amber-300">{stats.swaps}</strong></span>
           </div>
         </div>
-        <p className="text-xs text-slate-300 leading-relaxed max-w-4xl">
-          Matching the original C++ linked-list <code className="text-emerald-300 bg-slate-900 px-1 py-0.5 rounded font-mono">selectionSort()</code> algorithm.
-          This implementation operates on an isolated cloned array without invoking JavaScript’s native <code className="text-rose-300 bg-slate-900 px-1 py-0.5 rounded font-mono">.sort()</code> method, ensuring educational integrity and preventing unintentional mutation of stored portfolio state.
+        <p className="text-xs text-slate-300 leading-relaxed max-w-4xl font-sans">
+          Replicating the original C++ <code className="text-purple-300 bg-black/60 px-1 py-0.5 rounded font-mono">selectionSort()</code> logic. Operates on an isolated clone of the holdings array to maintain non-mutating safety, ranking elements strictly by Total Invested without using JavaScript's native <code className="text-rose-300 bg-black/60 px-1 py-0.5 rounded font-mono">.sort()</code>.
         </p>
       </div>
 
-      {/* Summary Cards: Total Portfolio & Highest Investment (Matching C++ program output) */}
+      {/* Summary Cards: Total Portfolio & Highest Investment */}
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-        {/* Total Portfolio Investment Card */}
-        <div className="p-5 fintech-card border-emerald-500/20">
+        <div className="glass-card p-5">
           <div className="flex items-center justify-between mb-2">
-            <span className="text-xs font-semibold uppercase tracking-wider text-slate-400">
+            <span className="text-[10px] font-mono text-slate-400 uppercase tracking-widest">
               Total Portfolio Investment
             </span>
-            <Wallet className="w-4 h-4 text-emerald-400" />
+            <Wallet className="w-4 h-4 text-purple-400" />
           </div>
           <div className="text-2xl font-extrabold text-white font-mono">
             {formatINR(totalPortfolio)}
           </div>
-          <p className="text-xs text-slate-400 mt-1">
+          <p className="text-[11px] text-slate-500 mt-1">
             Across {portfolioInvestments.length} individual stock positions
           </p>
         </div>
 
-        {/* Highest Investment Highlight Card */}
-        <div className="p-5 fintech-card border-amber-500/30 bg-gradient-to-br from-[#111827] to-[#1C1917]">
+        <div className="glass-card p-5 border-amber-500/25 bg-amber-950/[0.1]">
           <div className="flex items-center justify-between mb-2">
-            <span className="text-xs font-semibold uppercase tracking-wider text-amber-400 flex items-center gap-1.5 font-bold">
+            <span className="text-[10px] font-mono text-amber-300 uppercase tracking-widest flex items-center gap-1.5 font-bold">
               <Trophy className="w-3.5 h-3.5" />
               Highest Investment (Rank #1)
             </span>
@@ -161,9 +167,9 @@ export function RankingView() {
                   ({formatINR(highestInvestment.totalInvested)})
                 </span>
               </div>
-              <p className="text-xs text-slate-400 mt-1">
+              <p className="text-[11px] text-slate-400 mt-1">
                 {highestInvestment.quantity} shares @ {formatINR(highestInvestment.price)}/sh •{' '}
-                <span className="text-emerald-400 font-semibold">
+                <span className="text-purple-300 font-semibold font-mono">
                   {formatPercentage(calculateAllocationPercentage(highestInvestment.totalInvested, totalPortfolio))} allocation
                 </span>
               </p>
@@ -171,7 +177,7 @@ export function RankingView() {
           ) : (
             <div>
               <div className="text-lg font-bold text-slate-500">None</div>
-              <p className="text-xs text-slate-500 mt-1">No holdings registered for this user</p>
+              <p className="text-[11px] text-slate-500 mt-1">No investments added yet</p>
             </div>
           )}
         </div>
@@ -179,25 +185,32 @@ export function RankingView() {
 
       {/* Ranked Table */}
       {portfolioInvestments.length === 0 ? (
-        <EmptyState
-          icon={Layers}
-          title={`No Investments to Rank for ${selectedUser?.name}`}
-          description="Add stock holdings to this user's portfolio to rank them by total acquisition amount."
-          actionLabel="Add Stock Investment"
-          onAction={() => setAddHoldingModal({ isOpen: true, userId: selectedUserId })}
-        />
+        <div className="glass-card p-12 text-center">
+          <h4 className="text-base font-bold text-white mb-1">
+            No investments added yet for {selectedUser?.name}
+          </h4>
+          <p className="text-xs text-slate-400 max-w-sm mx-auto mb-5">
+            Add stock holdings to this user's portfolio to rank them by total invested capital.
+          </p>
+          <button
+            onClick={() => setAddHoldingModal({ isOpen: true, userId: selectedUserId })}
+            className="pill-btn-neon !text-xs"
+          >
+            + Add Stock Investment
+          </button>
+        </div>
       ) : (
-        <div className="fintech-card overflow-hidden">
-          <div className="p-4 sm:p-5 border-b border-[#1E293B] bg-[#0E1524] flex items-center justify-between">
+        <div className="glass-card overflow-hidden">
+          <div className="p-4 sm:p-5 border-b border-white/[0.06] bg-black/40 flex items-center justify-between">
             <div>
-              <h3 className="text-base font-bold text-white">
+              <h3 className="text-sm font-bold text-white font-mono uppercase tracking-wider">
                 Stocks Ranked from HIGHEST to LOWEST Investment
               </h3>
-              <p className="text-xs text-slate-400">
+              <p className="text-[11px] text-slate-400">
                 Sorted by Total Invested using Selection Sort
               </p>
             </div>
-            <span className="text-xs font-mono font-bold text-slate-400 bg-[#1E293B] px-2.5 py-1 rounded-lg">
+            <span className="text-xs font-mono font-bold text-purple-300 bg-white/[0.04] border border-white/10 px-2.5 py-1 rounded-lg">
               {sortedInvestments.length} Items Sorted
             </span>
           </div>
@@ -205,16 +218,16 @@ export function RankingView() {
           <div className="overflow-x-auto">
             <table className="w-full text-left border-collapse text-xs sm:text-sm">
               <thead>
-                <tr className="border-b border-[#1E293B] bg-[#0B0F19]/60 text-[11px] font-semibold text-slate-400 uppercase tracking-wider">
+                <tr className="border-b border-white/[0.06] bg-black/30 text-[10px] font-mono uppercase tracking-[0.2em] text-slate-400">
                   <th className="py-3.5 px-4 sm:px-6 w-16 text-center">Rank</th>
                   <th className="py-3.5 px-4 sm:px-6">Stock</th>
                   <th className="py-3.5 px-4 sm:px-6 text-right">Quantity</th>
                   <th className="py-3.5 px-4 sm:px-6 text-right">Avg Price</th>
                   <th className="py-3.5 px-4 sm:px-6 text-right">Total Invested</th>
-                  <th className="py-3.5 px-4 sm:px-6 text-right">Portfolio Allocation</th>
+                  <th className="py-3.5 px-4 sm:px-6 text-right">Allocation</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-[#1E293B]">
+              <tbody className="divide-y divide-white/[0.04]">
                 {sortedInvestments.map((item, index) => {
                   const rank = index + 1;
                   const isTopRank = rank === 1;
@@ -228,35 +241,31 @@ export function RankingView() {
                       key={item.id}
                       className={`transition-colors ${
                         isTopRank
-                          ? 'bg-amber-950/20 hover:bg-amber-950/30 font-medium'
-                          : 'hover:bg-[#162033]/60'
+                          ? 'bg-amber-500/[0.05] hover:bg-amber-500/[0.08]'
+                          : 'hover:bg-white/[0.02]'
                       }`}
                     >
-                      {/* Rank Column */}
+                      {/* Rank */}
                       <td className="py-4 px-4 sm:px-6 text-center">
                         <span
                           className={`inline-flex items-center justify-center w-7 h-7 rounded-lg text-xs font-mono font-bold ${
                             isTopRank
-                              ? 'bg-amber-400/20 text-amber-300 border border-amber-400/50 shadow-sm shadow-amber-950'
-                              : rank === 2
-                              ? 'bg-slate-300/10 text-slate-300 border border-slate-600'
-                              : rank === 3
-                              ? 'bg-amber-700/20 text-amber-500 border border-amber-800/40'
-                              : 'bg-[#1E293B] text-slate-400'
+                              ? 'bg-amber-400/20 text-amber-300 border border-amber-400/50'
+                              : 'bg-white/[0.04] text-slate-400 border border-white/10'
                           }`}
                         >
                           {rank}
                         </span>
                       </td>
 
-                      {/* Stock Name */}
+                      {/* Stock */}
                       <td className="py-4 px-4 sm:px-6">
                         <div className="flex items-center gap-2">
                           <span className="font-mono font-bold text-white text-sm">
                             {item.stockName}
                           </span>
                           {isTopRank && (
-                            <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold bg-amber-400/20 text-amber-300 border border-amber-400/40">
+                            <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-mono font-bold bg-amber-400/20 text-amber-300 border border-amber-400/40">
                               <Trophy className="w-3 h-3" />
                               Highest Holding
                             </span>
@@ -265,7 +274,7 @@ export function RankingView() {
                       </td>
 
                       {/* Quantity */}
-                      <td className="py-4 px-4 sm:px-6 text-right font-mono font-semibold text-slate-200">
+                      <td className="py-4 px-4 sm:px-6 text-right font-mono text-slate-200">
                         {item.quantity.toLocaleString('en-IN')}
                       </td>
 
@@ -276,7 +285,7 @@ export function RankingView() {
 
                       {/* Total Invested */}
                       <td className="py-4 px-4 sm:px-6 text-right font-mono font-bold text-sm">
-                        <span className={isTopRank ? 'text-amber-300' : 'text-emerald-400'}>
+                        <span className={isTopRank ? 'text-amber-300' : 'text-purple-300'}>
                           {formatINR(item.totalInvested)}
                         </span>
                       </td>
@@ -284,10 +293,10 @@ export function RankingView() {
                       {/* Allocation */}
                       <td className="py-4 px-4 sm:px-6 text-right">
                         <div className="flex items-center justify-end gap-2 font-mono">
-                          <div className="w-16 bg-[#1E293B] h-1.5 rounded-full overflow-hidden hidden sm:block">
+                          <div className="w-16 bg-white/[0.06] h-1.5 rounded-full overflow-hidden hidden sm:block">
                             <div
                               className={`h-full rounded-full ${
-                                isTopRank ? 'bg-amber-400' : 'bg-emerald-400'
+                                isTopRank ? 'bg-amber-400' : 'bg-purple-400'
                               }`}
                               style={{ width: `${Math.min(100, allocation)}%` }}
                             />

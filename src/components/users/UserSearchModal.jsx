@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Search, UserCheck, UserX, ArrowRight, PieChart, PlusCircle, ArrowUpDown } from 'lucide-react';
+import { Search, UserCheck, UserX, PieChart, PlusCircle, ArrowUpDown } from 'lucide-react';
 import { Modal } from '../common/Modal';
 import { usePortfolio } from '../../context/PortfolioContext';
 import { calculatePortfolioTotal } from '../../utils/calculations';
@@ -65,12 +65,12 @@ export function UserSearchModal() {
       maxWidth="max-w-lg"
     >
       <form onSubmit={handleSearch} className="mb-5">
-        <label className="block text-xs font-semibold text-slate-300 uppercase tracking-wider mb-1.5">
+        <label className="block text-xs font-mono font-semibold text-slate-300 uppercase tracking-widest mb-1.5">
           Enter User ID to Search
         </label>
         <div className="flex gap-2">
           <div className="relative flex-1">
-            <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-slate-500">
+            <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-slate-500">
               <Search className="w-4 h-4" />
             </div>
             <input
@@ -80,15 +80,15 @@ export function UserSearchModal() {
                 setSearchId(e.target.value);
                 setHasSearched(false);
               }}
-              placeholder="e.g. USR101"
-              className="fintech-input pl-9 font-mono"
+              placeholder="Enter User ID (e.g. USR01)"
+              className="cosmic-input pl-10 font-mono"
               autoFocus
             />
           </div>
           <button
             type="submit"
             disabled={!searchId.trim()}
-            className="fintech-btn-primary !px-5"
+            className="pill-btn-neon !py-2.5 !px-5"
           >
             Find
           </button>
@@ -99,26 +99,26 @@ export function UserSearchModal() {
       {hasSearched && (
         <div className="animate-in fade-in zoom-in-95 duration-200">
           {searchResult ? (
-            <div className="bg-[#0B0F19] border border-emerald-500/40 rounded-xl p-5 shadow-lg">
-              <div className="flex items-center gap-2 text-xs font-bold uppercase tracking-wider text-emerald-400 mb-3 pb-2 border-b border-[#1E293B]">
-                <UserCheck className="w-4 h-4" />
-                <span>================ USER FOUND ================</span>
+            <div className="bg-[#080A12] border border-purple-500/40 rounded-xl p-5 shadow-2xl">
+              <div className="flex items-center gap-2 text-xs font-bold font-mono uppercase tracking-widest text-purple-300 mb-3 pb-2 border-b border-white/[0.08]">
+                <UserCheck className="w-4 h-4 text-purple-400" />
+                <span>USER FOUND</span>
               </div>
 
               <div className="space-y-2.5 font-mono text-xs sm:text-sm">
-                <div className="flex justify-between items-center py-1 border-b border-[#1E293B]/60">
+                <div className="flex justify-between items-center py-1 border-b border-white/[0.04]">
                   <span className="text-slate-400">User ID :</span>
-                  <span className="font-bold text-white bg-slate-800/80 px-2 py-0.5 rounded text-emerald-400">
+                  <span className="font-bold text-purple-300 bg-purple-950/50 px-2 py-0.5 rounded border border-purple-800/40">
                     {searchResult.userID}
                   </span>
                 </div>
-                <div className="flex justify-between items-center py-1 border-b border-[#1E293B]/60">
+                <div className="flex justify-between items-center py-1 border-b border-white/[0.04]">
                   <span className="text-slate-400">User Name :</span>
                   <span className="font-semibold text-slate-200">
                     {searchResult.name}
                   </span>
                 </div>
-                <div className="flex justify-between items-center py-1 border-b border-[#1E293B]/60">
+                <div className="flex justify-between items-center py-1 border-b border-white/[0.04]">
                   <span className="text-slate-400">Different Stocks :</span>
                   <span className="font-semibold text-cyan-400">
                     {searchResult.investments?.length || 0}
@@ -126,75 +126,48 @@ export function UserSearchModal() {
                 </div>
                 <div className="flex justify-between items-center py-1">
                   <span className="text-slate-400">Total Investment :</span>
-                  <span className="font-bold text-emerald-400 text-sm sm:text-base">
+                  <span className="font-bold text-white text-sm sm:text-base">
                     {formatINR(calculatePortfolioTotal(searchResult.investments))}
                   </span>
                 </div>
               </div>
 
               {/* Action shortcuts */}
-              <div className="mt-5 pt-4 border-t border-[#1E293B] flex flex-wrap gap-2">
+              <div className="mt-5 pt-4 border-t border-white/[0.08] flex flex-wrap gap-2">
                 <button
                   onClick={() => handleGoToPortfolio(searchResult.userID)}
-                  className="flex-1 fintech-btn-primary !py-2 !text-xs"
+                  className="flex-1 pill-btn-neon !py-2 !text-xs"
                 >
-                  <PieChart className="w-3.5 h-3.5 text-slate-950" />
-                  View Portfolio
+                  <PieChart className="w-3.5 h-3.5" />
+                  Portfolio
                 </button>
                 <button
                   onClick={() => handleGoToRanking(searchResult.userID)}
-                  className="flex-1 fintech-btn-secondary !py-2 !text-xs"
+                  className="flex-1 pill-btn-secondary !py-2 !text-xs"
                 >
-                  <ArrowUpDown className="w-3.5 h-3.5 text-slate-300" />
-                  View Ranking
+                  <ArrowUpDown className="w-3.5 h-3.5 text-purple-400" />
+                  Ranking
                 </button>
                 <button
                   onClick={() => handleAddInvestmentForUser(searchResult.userID)}
-                  className="flex-1 fintech-btn-secondary !py-2 !text-xs"
+                  className="flex-1 pill-btn-secondary !py-2 !text-xs"
                 >
-                  <PlusCircle className="w-3.5 h-3.5 text-emerald-400" />
+                  <PlusCircle className="w-3.5 h-3.5 text-cyan-400" />
                   Add Stock
                 </button>
               </div>
             </div>
           ) : (
-            <div className="bg-[#221015]/60 border border-rose-800/40 rounded-xl p-6 text-center">
+            <div className="bg-[#1A0B10] border border-rose-800/40 rounded-xl p-6 text-center">
               <div className="w-12 h-12 rounded-xl bg-rose-950/60 border border-rose-800/40 flex items-center justify-center mx-auto mb-3 text-rose-400">
                 <UserX className="w-6 h-6" />
               </div>
               <h4 className="text-sm font-bold text-white mb-1">User not found.</h4>
               <p className="text-xs text-slate-400 max-w-xs mx-auto">
                 No user exists with ID <span className="font-mono text-rose-300 font-semibold">"{searchId}"</span>.
-                Check the ID or register a new user profile.
               </p>
             </div>
           )}
-        </div>
-      )}
-
-      {/* Available registered users hint */}
-      {users.length > 0 && !hasSearched && (
-        <div className="mt-2 text-xs text-slate-400">
-          <p className="font-semibold text-slate-400 uppercase text-[10px] tracking-wider mb-1.5">
-            Registered User IDs in system:
-          </p>
-          <div className="flex flex-wrap gap-1.5">
-            {users.map((u) => (
-              <button
-                key={u.userID}
-                type="button"
-                onClick={() => {
-                  setSearchId(u.userID);
-                  const found = users.find((x) => x.userID === u.userID);
-                  setHasSearched(true);
-                  setSearchResult(found || null);
-                }}
-                className="font-mono px-2 py-0.5 rounded bg-[#1E293B] hover:bg-[#28384E] text-slate-300 text-xs transition-colors"
-              >
-                {u.userID} ({u.name})
-              </button>
-            ))}
-          </div>
         </div>
       )}
     </Modal>

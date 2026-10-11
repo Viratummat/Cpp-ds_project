@@ -4,51 +4,185 @@
 
 @layer base {
   body {
-    @apply bg-[#0B0F19] text-slate-100 font-sans antialiased;
+    @apply bg-[#040508] text-slate-100 font-sans antialiased overflow-x-hidden;
     color-scheme: dark;
+    background-color: #040508;
   }
 
-  /* Custom subtle scrollbars for dark mode */
+  /* Custom sleek scrollbar */
   ::-webkit-scrollbar {
-    width: 6px;
-    height: 6px;
+    width: 5px;
+    height: 5px;
   }
   ::-webkit-scrollbar-track {
-    background: #0B0F19;
+    background: #040508;
   }
   ::-webkit-scrollbar-thumb {
-    background: #1E293B;
+    background: #1A1D2B;
     border-radius: 9999px;
   }
   ::-webkit-scrollbar-thumb:hover {
-    background: #334155;
+    background: #2E334D;
   }
 }
 
 @layer components {
-  /* Glass card styling */
-  .fintech-card {
-    @apply bg-[#111827] border border-[#1E293B] rounded-xl shadow-lg;
+  /* Cosmic luxury background container */
+  .cosmic-spotlight {
+    position: fixed;
+    top: 0;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 100vw;
+    height: 85vh;
+    background: radial-gradient(ellipse 65% 55% at 50% 0%, rgba(139, 92, 246, 0.22) 0%, rgba(99, 102, 241, 0.08) 50%, transparent 80%);
+    pointer-events: none;
+    z-index: 0;
   }
 
-  .fintech-card-hover {
-    @apply transition-all duration-200 hover:border-emerald-500/40 hover:shadow-emerald-500/5;
+  /* Volumetric light beam */
+  .spotlight-beam {
+    position: absolute;
+    top: 0;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 380px;
+    height: 600px;
+    background: linear-gradient(180deg, rgba(168, 85, 247, 0.28) 0%, rgba(99, 102, 241, 0.12) 60%, transparent 100%);
+    clip-path: polygon(30% 0%, 70% 0%, 100% 100%, 0% 100%);
+    filter: blur(28px);
+    pointer-events: none;
+    opacity: 0.85;
   }
 
-  /* Inputs and buttons */
-  .fintech-input {
-    @apply w-full bg-[#0B0F19] border border-[#273549] rounded-lg px-3.5 py-2.5 text-sm text-slate-100 placeholder-slate-500 focus:outline-none focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 transition-colors;
+  /* 3D perspective floor dot grid */
+  .perspective-dot-grid {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    height: 55vh;
+    background-image: radial-gradient(rgba(168, 85, 247, 0.35) 1px, transparent 1px);
+    background-size: 32px 32px;
+    mask-image: linear-gradient(to top, rgba(0, 0, 0, 0.9) 0%, rgba(0, 0, 0, 0.4) 50%, transparent 100%);
+    -webkit-mask-image: linear-gradient(to top, rgba(0, 0, 0, 0.9) 0%, rgba(0, 0, 0, 0.4) 50%, transparent 100%);
+    transform: perspective(600px) rotateX(60deg) scale(1.6);
+    transform-origin: bottom center;
+    pointer-events: none;
+    opacity: 0.45;
   }
 
-  .fintech-btn-primary {
-    @apply inline-flex items-center justify-center gap-2 px-4 py-2 text-sm font-semibold text-slate-900 bg-emerald-400 hover:bg-emerald-300 active:bg-emerald-500 rounded-lg shadow-sm shadow-emerald-950 transition-all focus:outline-none focus:ring-2 focus:ring-emerald-400/50 disabled:opacity-50 disabled:pointer-events-none;
+  /* Ultra-sleek glass card */
+  .glass-card {
+    background: rgba(10, 12, 20, 0.75);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    border-radius: 16px;
+    transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
   }
 
-  .fintech-btn-secondary {
-    @apply inline-flex items-center justify-center gap-2 px-4 py-2 text-sm font-medium text-slate-300 hover:text-white bg-[#1E293B] hover:bg-[#28384E] active:bg-[#1E293B] border border-[#334155] rounded-lg transition-colors focus:outline-none focus:ring-2 focus:ring-slate-400/20 disabled:opacity-50 disabled:pointer-events-none;
+  .glass-card-hover {
+    @apply hover:border-purple-500/40 hover:shadow-[0_0_25px_rgba(168,85,247,0.12)];
   }
 
-  .fintech-btn-danger {
-    @apply inline-flex items-center justify-center gap-2 px-4 py-2 text-sm font-medium text-rose-300 hover:text-rose-100 bg-rose-950/40 hover:bg-rose-900/60 border border-rose-800/40 rounded-lg transition-colors focus:outline-none focus:ring-2 focus:ring-rose-500/30 disabled:opacity-50 disabled:pointer-events-none;
+  /* Right-side stacked telemetry box (06 RELEASES style) */
+  .telemetry-card {
+    background: rgba(14, 17, 28, 0.65);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    backdrop-filter: blur(16px);
+    border-radius: 18px;
+    padding: 16px 20px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    min-width: 100px;
+    transition: all 0.25s ease;
+  }
+  .telemetry-card:hover {
+    border-color: rgba(168, 85, 247, 0.35);
+    box-shadow: 0 0 20px rgba(168, 85, 247, 0.15);
+  }
+
+  /* Glowing Neon Pill Buttons */
+  .pill-btn-neon {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    padding: 10px 24px;
+    border-radius: 9999px;
+    font-size: 11.5px;
+    font-weight: 700;
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+    color: #FFFFFF;
+    background: rgba(14, 11, 26, 0.85);
+    border: 1px solid rgba(192, 132, 252, 0.7);
+    box-shadow: 0 0 22px rgba(168, 85, 247, 0.35), inset 0 0 12px rgba(168, 85, 247, 0.15);
+    transition: all 0.25s ease;
+  }
+  .pill-btn-neon:hover {
+    border-color: rgba(233, 213, 255, 0.95);
+    box-shadow: 0 0 32px rgba(168, 85, 247, 0.55), inset 0 0 16px rgba(168, 85, 247, 0.25);
+    transform: translateY(-1px);
+  }
+
+  /* Sleek secondary button (+ Start a project style) */
+  .pill-btn-secondary {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    padding: 8px 18px;
+    border-radius: 9999px;
+    font-size: 12px;
+    font-weight: 600;
+    color: #F1F5F9;
+    background: rgba(18, 21, 33, 0.7);
+    border: 1px solid rgba(255, 255, 255, 0.14);
+    backdrop-filter: blur(12px);
+    transition: all 0.2s ease;
+  }
+  .pill-btn-secondary:hover {
+    border-color: rgba(255, 255, 255, 0.35);
+    background: rgba(28, 33, 52, 0.85);
+    color: #FFFFFF;
+  }
+
+  /* Form inputs */
+  .cosmic-input {
+    width: 100%;
+    background: rgba(8, 10, 16, 0.85);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 12px;
+    padding: 10px 14px;
+    font-size: 13px;
+    color: #F8FAFC;
+    transition: all 0.2s ease;
+  }
+  .cosmic-input:focus {
+    outline: none;
+    border-color: rgba(168, 85, 247, 0.65);
+    box-shadow: 0 0 18px rgba(168, 85, 247, 0.2);
+    background: rgba(12, 14, 24, 0.95);
+  }
+  .cosmic-input::placeholder {
+    color: #64748B;
+  }
+
+  /* Purple gradient accent text */
+  .text-gradient-purple {
+    background: linear-gradient(135deg, #E9D5FF 0%, #C084FC 45%, #A855F7 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+  }
+
+  /* Subtitle text gradient */
+  .text-gradient-subtle {
+    background: linear-gradient(180deg, #FFFFFF 0%, #94A3B8 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
   }
 }

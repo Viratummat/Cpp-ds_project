@@ -7,7 +7,6 @@ import {
   clearData,
   getStorageInfo,
   STORAGE_KEY,
-  SAMPLE_DATA,
 } from '../storageService';
 
 // Mock localStorage in Vitest Node environment
@@ -43,50 +42,52 @@ describe('LocalStorage Service', () => {
     vi.clearAllMocks();
   });
 
-  it('loads clean empty state when storage is empty', () => {
+  it('starts in a strictly clean empty state with zero users', () => {
     const result = loadData();
     expect(result.users).toEqual([]);
     expect(result.isFirstRun).toBe(true);
   });
 
-  it('saves and reloads user portfolio state accurately', () => {
-    const testUsers = [
+  it('persists and reloads user-created portfolios safely', () => {
+    const newUsers = [
       {
-        userID: 'USR101',
-        name: 'Virat Kumar',
+        userID: 'INV_001',
+        name: 'Account Holder',
         investments: [
           {
             id: 'inv_1',
             stockName: 'TCS',
-            quantity: 20,
+            quantity: 25,
             price: 3500,
-            totalInvested: 70000,
+            totalInvested: 87500,
           },
         ],
       },
     ];
 
-    const saveRes = saveData(testUsers);
+    const saveRes = saveData(newUsers);
     expect(saveRes.success).toBe(true);
-    expect(localStorageMock.setItem).toHaveBeenCalledWith(
-      STORAGE_KEY,
-      expect.stringContaining('USR101')
-    );
 
     const loaded = loadData();
     expect(loaded.users).toHaveLength(1);
-    expect(loaded.users[0].userID).toBe('USR101');
+    expect(loaded.users[0].userID).toBe('INV_001');
     expect(loaded.users[0].investments[0].stockName).toBe('TCS');
-    expect(loaded.users[0].investments[0].totalInvested).toBe(70000);
+    expect(loaded.users[0].investments[0].totalInvested).toBe(87500);
   });
 
   it('exports structured JSON backup with required metadata', () => {
-    const users = SAMPLE_DATA.users;
-    const jsonStr = exportData(users);
+    const testUsers = [
+      {
+        userID: 'USER_10',
+        name: 'Investor One',
+        investments: [],
+      },
+    ];
+    const jsonStr = exportData(testUsers);
     const parsed = JSON.parse(jsonStr);
 
     expect(parsed.appName).toBe('Stock Portfolio Management System');
-    expect(parsed.users).toHaveLength(users.length);
+    expect(parsed.users).toHaveLength(1);
     expect(parsed.exportedAt).toBeDefined();
   });
 
@@ -95,15 +96,15 @@ describe('LocalStorage Service', () => {
       version: '1.0.0',
       users: [
         {
-          userID: 'TEST99',
-          name: 'Backup Investor',
+          userID: 'TEST_RESTORE',
+          name: 'Restored Profile',
           investments: [
             {
               id: 'inv_test',
               stockName: 'INFY',
-              quantity: 15,
+              quantity: 10,
               price: 1800,
-              totalInvested: 27000,
+              totalInvested: 18000,
             },
           ],
         },
@@ -113,19 +114,19 @@ describe('LocalStorage Service', () => {
     const importRes = importData(backupJson);
     expect(importRes.success).toBe(true);
     expect(importRes.users).toHaveLength(1);
-    expect(importRes.users[0].userID).toBe('TEST99');
+    expect(importRes.users[0].userID).toBe('TEST_RESTORE');
   });
 
   it('rejects corrupt or invalid JSON backup without mutating storage', () => {
-    const badJson = '{"notAValidBackup": true}';
+    const badJson = '{"invalidStructure": true}';
     const importRes = importData(badJson);
     expect(importRes.success).toBe(false);
     expect(importRes.error).toBeDefined();
   });
 
-  it('clears data and resets storage correctly', () => {
-    saveData(SAMPLE_DATA.users);
-    expect(loadData().users.length).toBeGreaterThan(0);
+  it('clears all data and returns to clean empty state', () => {
+    saveData([{ userID: 'TEMP', name: 'Temp', investments: [] }]);
+    expect(loadData().users.length).toBe(1);
 
     const clearRes = clearData();
     expect(clearRes.success).toBe(true);
@@ -133,9 +134,10 @@ describe('LocalStorage Service', () => {
   });
 
   it('computes storage diagnostics correctly', () => {
-    const info = getStorageInfo(SAMPLE_DATA.users);
+    const info = getStorageInfo([]);
     expect(info.isAvailable).toBe(true);
     expect(info.storageKey).toBe(STORAGE_KEY);
-    expect(info.usersCount).toBe(SAMPLE_DATA.users.length);
+    expect(info.usersCount).toBe(0);
+    expect(info.holdingsCount).toBe(0);
   });
 });

@@ -18,6 +18,7 @@ export function UserModal() {
   const isEditing = editUserModal.isOpen;
   const isOpen = addUserModalOpen || isEditing;
 
+  // Form fields strictly start empty with no prefilled personal info
   const [userId, setUserId] = useState('');
   const [userName, setUserName] = useState('');
   const [errors, setErrors] = useState({});
@@ -40,6 +41,8 @@ export function UserModal() {
     } else {
       setAddUserModalOpen(false);
     }
+    setUserId('');
+    setUserName('');
     setErrors({});
   };
 
@@ -83,14 +86,14 @@ export function UserModal() {
       }
       maxWidth="max-w-md"
     >
-      <form onSubmit={handleSubmit} className="space-y-4">
+      <form onSubmit={handleSubmit} className="space-y-5">
         {/* User ID */}
         <div>
-          <label className="block text-xs font-semibold text-slate-300 uppercase tracking-wider mb-1.5">
-            User ID <span className="text-emerald-400">*</span>
+          <label className="block text-xs font-mono font-semibold text-slate-300 uppercase tracking-widest mb-1.5">
+            User ID <span className="text-purple-400">*</span>
           </label>
           <div className="relative">
-            <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-slate-500">
+            <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-slate-500">
               <Tag className="w-4 h-4" />
             </div>
             <input
@@ -101,10 +104,10 @@ export function UserModal() {
                 setUserId(e.target.value);
                 if (errors.userId) setErrors((prev) => ({ ...prev, userId: null }));
               }}
-              placeholder="e.g. USR101, virat1, INV_01"
-              className={`fintech-input pl-9 font-mono ${
-                isEditing ? 'bg-slate-900/50 text-slate-400 border-slate-800 cursor-not-allowed' : ''
-              } ${errors.userId ? 'border-rose-500 focus:border-rose-500 focus:ring-rose-500' : ''}`}
+              placeholder="Enter your unique ID"
+              className={`cosmic-input pl-10 font-mono ${
+                isEditing ? 'opacity-60 cursor-not-allowed bg-black/60' : ''
+              } ${errors.userId ? 'border-rose-500' : ''}`}
               autoFocus={!isEditing}
             />
           </div>
@@ -116,18 +119,18 @@ export function UserModal() {
           )}
           {!isEditing && (
             <p className="mt-1 text-[11px] text-slate-500">
-              Must be unique across the system. Cannot be changed once created.
+              Unique identifier. Letters, numbers, hyphens, and underscores supported.
             </p>
           )}
         </div>
 
         {/* User Name */}
         <div>
-          <label className="block text-xs font-semibold text-slate-300 uppercase tracking-wider mb-1.5">
-            Full Name <span className="text-emerald-400">*</span>
+          <label className="block text-xs font-mono font-semibold text-slate-300 uppercase tracking-widest mb-1.5">
+            Full Name <span className="text-purple-400">*</span>
           </label>
           <div className="relative">
-            <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-slate-500">
+            <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-slate-500">
               <User className="w-4 h-4" />
             </div>
             <input
@@ -137,9 +140,9 @@ export function UserModal() {
                 setUserName(e.target.value);
                 if (errors.userName) setErrors((prev) => ({ ...prev, userName: null }));
               }}
-              placeholder="e.g. Virat Kumar, Priya Sharma"
-              className={`fintech-input pl-9 ${
-                errors.userName ? 'border-rose-500 focus:border-rose-500 focus:ring-rose-500' : ''
+              placeholder="Enter your name"
+              className={`cosmic-input pl-10 ${
+                errors.userName ? 'border-rose-500' : ''
               }`}
               autoFocus={isEditing}
             />
@@ -151,22 +154,22 @@ export function UserModal() {
             </p>
           )}
           <p className="mt-1 text-[11px] text-slate-500">
-            Supports spaces and full legal names.
+            Supports names with spaces.
           </p>
         </div>
 
-        {/* Form Actions */}
-        <div className="flex items-center justify-end gap-3 pt-4 border-t border-[#1E293B]">
+        {/* Actions */}
+        <div className="flex items-center justify-end gap-3 pt-4 border-t border-white/[0.08]">
           <button
             type="button"
             onClick={handleClose}
-            className="fintech-btn-secondary"
+            className="pill-btn-secondary !text-xs !py-2"
           >
             Cancel
           </button>
           <button
             type="submit"
-            className="fintech-btn-primary"
+            className="pill-btn-neon !text-xs !py-2"
           >
             {isEditing ? 'Save Changes' : 'Create User'}
           </button>

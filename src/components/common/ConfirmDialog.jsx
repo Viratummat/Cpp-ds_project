@@ -11,52 +11,52 @@ export function ConfirmDialog() {
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
       {/* Backdrop */}
       <div
-        className="fixed inset-0 bg-black/80 backdrop-blur-sm"
+        className="fixed inset-0 bg-black/85 backdrop-blur-md"
         onClick={closeConfirm}
       />
 
-      {/* Dialog box */}
-      <div className="relative w-full max-w-md bg-[#111827] border border-[#273549] rounded-2xl p-6 shadow-2xl z-10 animate-in fade-in zoom-in-95">
+      {/* Dialog Card */}
+      <div className="relative w-full max-w-md bg-[#080A12]/95 border border-white/[0.12] rounded-2xl p-6 shadow-2xl z-10 animate-in fade-in zoom-in-95">
         <div className="flex items-start gap-4 mb-4">
           <div
-            className={`w-12 h-12 rounded-xl flex items-center justify-center flex-shrink-0 ${
+            className={`w-11 h-11 rounded-xl flex items-center justify-center flex-shrink-0 ${
               confirmDialog.isDestructive
                 ? 'bg-rose-950/60 border border-rose-800/40 text-rose-400'
-                : 'bg-emerald-950/60 border border-emerald-800/40 text-emerald-400'
+                : 'bg-purple-950/60 border border-purple-800/40 text-purple-400'
             }`}
           >
             {confirmDialog.isDestructive ? (
-              <AlertTriangle className="w-6 h-6" />
+              <AlertTriangle className="w-5 h-5" />
             ) : (
-              <Info className="w-6 h-6" />
+              <Info className="w-5 h-5" />
             )}
           </div>
           <div>
-            <h3 className="text-lg font-bold text-white mb-1">
+            <h3 className="text-base font-bold text-white mb-1">
               {confirmDialog.title}
             </h3>
-            <p className="text-xs text-slate-300 leading-relaxed">
+            <p className="text-xs text-slate-300 leading-relaxed font-sans">
               {confirmDialog.message}
             </p>
           </div>
         </div>
 
-        <div className="flex items-center justify-end gap-3 pt-3 border-t border-[#1E293B]">
+        <div className="flex items-center justify-end gap-3 pt-3 border-t border-white/[0.08]">
           <button
             type="button"
             onClick={closeConfirm}
-            className="px-4 py-2 text-sm font-medium text-slate-300 hover:text-white bg-[#1E293B] hover:bg-[#28384E] rounded-lg transition-colors"
+            className="pill-btn-secondary !text-xs !py-2"
           >
             {confirmDialog.cancelText}
           </button>
           <button
             type="button"
             onClick={confirmDialog.onConfirm}
-            className={`px-4 py-2 text-sm font-semibold rounded-lg transition-colors ${
+            className={
               confirmDialog.isDestructive
-                ? 'bg-rose-600 hover:bg-rose-500 text-white shadow-lg shadow-rose-950/50'
-                : 'bg-emerald-500 hover:bg-emerald-400 text-slate-900 shadow-lg shadow-emerald-950/50'
-            }`}
+                ? 'pill-btn-secondary !text-rose-300 !border-rose-700/50 hover:!bg-rose-950/50 !text-xs !py-2'
+                : 'pill-btn-neon !text-xs !py-2'
+            }
           >
             {confirmDialog.confirmText}
           </button>

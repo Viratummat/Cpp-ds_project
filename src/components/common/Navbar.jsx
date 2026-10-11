@@ -1,80 +1,106 @@
 import React from 'react';
-import {
-  Menu,
-  Search,
-  UserPlus,
-  PlusCircle,
-  Database,
-  CheckCircle,
-} from 'lucide-react';
+import { Search, Plus, Menu } from 'lucide-react';
 import { usePortfolio } from '../../context/PortfolioContext';
+import { BrandLogo } from './BrandLogo';
 
 export function Navbar({ onOpenMobileMenu }) {
   const {
+    activeTab,
+    setActiveTab,
     setAddUserModalOpen,
-    setAddHoldingModal,
     setSearchUserModalOpen,
-    selectedUserId,
     users,
-    storageInfo,
   } = usePortfolio();
 
+  const navLinks = [
+    { id: 'overview', label: 'Home' },
+    { id: 'users', label: 'Users' },
+    { id: 'portfolio', label: 'Portfolio' },
+    { id: 'ranking', label: 'Ranking' },
+    { id: 'settings', label: 'Data' },
+  ];
+
   return (
-    <header className="h-16 bg-[#0E1524]/90 backdrop-blur-md border-b border-[#1E293B] sticky top-0 z-30 px-4 sm:px-6 flex items-center justify-between gap-4">
-      {/* Left: Mobile hamburger & breadcrumb/title */}
-      <div className="flex items-center gap-3">
-        <button
-          onClick={onOpenMobileMenu}
-          className="p-2 rounded-lg text-slate-400 hover:text-white hover:bg-[#1E293B] md:hidden transition-colors"
-          aria-label="Open mobile menu"
-        >
-          <Menu className="w-5 h-5" />
-        </button>
-
-        {/* C++ Search Button */}
-        <button
-          onClick={() => setSearchUserModalOpen(true)}
-          className="flex items-center gap-2.5 px-3 py-1.5 bg-[#111827] hover:bg-[#162033] border border-[#273549] hover:border-slate-600 rounded-lg text-xs text-slate-400 hover:text-slate-200 transition-colors shadow-sm"
-        >
-          <Search className="w-3.5 h-3.5 text-emerald-400" />
-          <span className="hidden sm:inline">Search User by ID (C++ Find)...</span>
-          <span className="sm:hidden">Search...</span>
-          <kbd className="hidden md:inline-flex items-center px-1.5 py-0.5 text-[10px] bg-[#1E293B] border border-[#334155] rounded text-slate-400">
-            findUser
-          </kbd>
-        </button>
-      </div>
-
-      {/* Right: Storage Status & Quick Actions */}
-      <div className="flex items-center gap-2.5">
-        {/* Storage status pill */}
-        <div
-          className="hidden lg:flex items-center gap-1.5 px-2.5 py-1 bg-[#111827] border border-[#1E293B] rounded-lg text-xs text-slate-400"
-          title={`LocalStorage: ${storageInfo.formattedSize} used`}
-        >
-          <div className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
-          <span>Storage: {storageInfo.formattedSize}</span>
+    <header className="sticky top-0 z-40 w-full bg-[#040508]/85 backdrop-blur-xl border-b border-white/[0.06]">
+      {/* Primary Navigation Bar */}
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-20 flex items-center justify-between">
+        {/* Left: Brand Logo */}
+        <div className="flex items-center gap-4">
+          <button
+            onClick={() => setActiveTab('overview')}
+            className="flex items-center hover:opacity-85 transition-opacity"
+          >
+            <BrandLogo />
+          </button>
         </div>
 
-        {/* Quick Add User */}
-        <button
-          onClick={() => setAddUserModalOpen(true)}
-          className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold text-slate-200 hover:text-white bg-[#1E293B] hover:bg-[#28384E] border border-[#334155] rounded-lg transition-colors"
-        >
-          <UserPlus className="w-3.5 h-3.5 text-emerald-400" />
-          <span className="hidden sm:inline">Add User</span>
-        </button>
+        {/* Center: Desktop Navigation Links (matching Home Work Studio Journal) */}
+        <nav className="hidden md:flex items-center gap-8">
+          {navLinks.map((link) => {
+            const isActive = activeTab === link.id;
+            return (
+              <button
+                key={link.id}
+                onClick={() => setActiveTab(link.id)}
+                className={`text-xs uppercase tracking-[0.2em] font-medium transition-all duration-200 relative py-1 ${
+                  isActive
+                    ? 'text-white font-semibold'
+                    : 'text-slate-400 hover:text-slate-200'
+                }`}
+              >
+                {link.label}
+                {isActive && (
+                  <span className="absolute bottom-0 left-0 right-0 h-[2px] bg-gradient-to-r from-purple-400 to-indigo-400 rounded-full shadow-[0_0_8px_rgba(168,85,247,0.8)]" />
+                )}
+              </button>
+            );
+          })}
+        </nav>
 
-        {/* Quick Add Investment */}
-        <button
-          onClick={() => setAddHoldingModal({ isOpen: true, userId: selectedUserId || (users[0]?.userID || null) })}
-          disabled={users.length === 0}
-          className="fintech-btn-primary !px-3 !py-1.5 !text-xs"
-          title={users.length === 0 ? 'Create a user first' : 'Add stock holding'}
-        >
-          <PlusCircle className="w-3.5 h-3.5 text-slate-950" />
-          <span>Add Stock</span>
-        </button>
+        {/* Right: Actions */}
+        <div className="flex items-center gap-3">
+          {/* C++ User ID Search Button */}
+          <button
+            onClick={() => setSearchUserModalOpen(true)}
+            className="hidden sm:inline-flex items-center gap-2 px-3 py-1.5 rounded-full text-xs text-slate-300 hover:text-white bg-white/[0.04] hover:bg-white/[0.08] border border-white/10 transition-colors"
+            title="Search User by ID (C++ findUser)"
+          >
+            <Search className="w-3.5 h-3.5 text-purple-400" />
+            <span className="text-[11px] font-mono">findUser</span>
+          </button>
+
+          {/* "+ Start a project" Style Pill Button */}
+          <button
+            onClick={() => setAddUserModalOpen(true)}
+            className="pill-btn-secondary"
+          >
+            <Plus className="w-3.5 h-3.5 text-purple-400" />
+            <span>Register User</span>
+          </button>
+
+          {/* Mobile hamburger */}
+          <button
+            onClick={onOpenMobileMenu}
+            className="md:hidden p-2 rounded-lg text-slate-400 hover:text-white hover:bg-white/[0.06] transition-colors"
+          >
+            <Menu className="w-5 h-5" />
+          </button>
+        </div>
+      </div>
+
+      {/* Sub-navigation Ribbon Breadcrumb matching the photo */}
+      <div className="hidden lg:block border-t border-white/[0.04] py-2 bg-black/40">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex items-center justify-center gap-4 text-[10px] tracking-[0.3em] font-mono text-slate-500 uppercase">
+          <span className={activeTab === 'overview' ? 'text-purple-400 font-bold' : ''}>OVERVIEW</span>
+          <span>&gt;</span>
+          <span className={activeTab === 'users' ? 'text-purple-400 font-bold' : ''}>USERS</span>
+          <span>&gt;</span>
+          <span className={activeTab === 'portfolio' ? 'text-purple-400 font-bold' : ''}>PORTFOLIO</span>
+          <span>&gt;</span>
+          <span className={activeTab === 'ranking' ? 'text-purple-400 font-bold' : ''}>SELECTION SORT</span>
+          <span>&gt;</span>
+          <span className={activeTab === 'settings' ? 'text-purple-400 font-bold' : ''}>BACKUP & DATA</span>
+        </div>
       </div>
     </header>
   );

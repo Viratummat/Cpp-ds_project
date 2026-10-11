@@ -2,7 +2,6 @@ import React, { useEffect } from 'react';
 import { X } from 'lucide-react';
 
 export function Modal({ isOpen, onClose, title, subtitle, children, maxWidth = 'max-w-lg' }) {
-  // Listen for Escape key
   useEffect(() => {
     const handleKeyDown = (e) => {
       if (e.key === 'Escape' && isOpen) {
@@ -13,7 +12,6 @@ export function Modal({ isOpen, onClose, title, subtitle, children, maxWidth = '
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, [isOpen, onClose]);
 
-  // Prevent background scrolling when open
   useEffect(() => {
     if (isOpen) {
       document.body.style.overflow = 'hidden';
@@ -31,29 +29,33 @@ export function Modal({ isOpen, onClose, title, subtitle, children, maxWidth = '
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 sm:p-6 overflow-y-auto">
       {/* Backdrop */}
       <div
-        className="fixed inset-0 bg-black/75 backdrop-blur-sm transition-opacity"
+        className="fixed inset-0 bg-black/80 backdrop-blur-md transition-opacity"
         onClick={onClose}
         aria-hidden="true"
       />
 
-      {/* Modal Card */}
+      {/* Modal Dialog Card */}
       <div
-        className={`relative w-full ${maxWidth} bg-[#111827] border border-[#273549] rounded-2xl shadow-2xl z-10 overflow-hidden transform transition-all duration-200 animate-in fade-in zoom-in-95`}
+        className={`relative w-full ${maxWidth} bg-[#080A12]/95 border border-white/[0.12] rounded-2xl shadow-[0_20px_60px_rgba(0,0,0,0.8)] z-10 overflow-hidden transform transition-all duration-200 animate-in fade-in zoom-in-95`}
       >
         {/* Header */}
-        <div className="flex items-start justify-between p-5 border-b border-[#1E293B] bg-[#0E1524]">
+        <div className="flex items-start justify-between p-5 border-b border-white/[0.06] bg-white/[0.02]">
           <div>
-            <h3 className="text-lg font-bold text-white tracking-tight">{title}</h3>
+            <h3 className="text-base font-bold text-white tracking-tight font-sans">
+              {title}
+            </h3>
             {subtitle && (
-              <p className="text-xs text-slate-400 mt-0.5">{subtitle}</p>
+              <p className="text-[11px] text-slate-400 mt-0.5 font-mono">
+                {subtitle}
+              </p>
             )}
           </div>
           <button
             onClick={onClose}
-            className="p-1.5 rounded-lg text-slate-400 hover:text-white hover:bg-[#1E293B] transition-colors"
+            className="p-1.5 rounded-lg text-slate-400 hover:text-white hover:bg-white/[0.06] transition-colors"
             aria-label="Close modal"
           >
-            <X className="w-5 h-5" />
+            <X className="w-4 h-4" />
           </button>
         </div>
 

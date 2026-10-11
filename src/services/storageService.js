@@ -1,130 +1,17 @@
 /**
  * LocalStorage Persistence Service
  * 
- * Responsibilities:
- * - Versioned persistence under `stockPortfolioApp_v1`
- * - Resilient error handling (QuotaExceeded, private mode, JSON corruption)
- * - Safe update pattern with fallback to last known-good state
- * - Full export / import validation
- * - Storage diagnostics and metadata
+ * Strict behavioral rules:
+ * - Starts in 100% clean, empty state with ZERO users and ZERO investments.
+ * - Absolutely NO automatic seeding of example users or prefilled personal names.
+ * - Safe versioned persistence under `stockPortfolioApp_v1`.
+ * - Deep validation for all JSON imports and exports.
  */
 
 import { validateImportPayload } from '../utils/validation';
 
 export const STORAGE_KEY = 'stockPortfolioApp_v1';
 export const APP_VERSION = '1.0.0';
-
-/**
- * Realistic Indian Stock Market sample portfolio data
- * Clearly labeled and optional, perfect for demonstrating the system.
- */
-export const SAMPLE_DATA = {
-  version: APP_VERSION,
-  exportedAt: new Date().toISOString(),
-  users: [
-    {
-      userID: 'USR101',
-      name: 'Virat Kumar',
-      createdAt: new Date(Date.now() - 86400000 * 5).toISOString(),
-      investments: [
-        {
-          id: 'inv_sample_1',
-          stockName: 'RELIANCE',
-          quantity: 50,
-          price: 2950.00,
-          totalInvested: 147500.00,
-          addedAt: new Date(Date.now() - 86400000 * 4).toISOString(),
-        },
-        {
-          id: 'inv_sample_2',
-          stockName: 'TCS',
-          quantity: 35,
-          price: 4120.50,
-          totalInvested: 144217.50,
-          addedAt: new Date(Date.now() - 86400000 * 3).toISOString(),
-        },
-        {
-          id: 'inv_sample_3',
-          stockName: 'HDFCBANK',
-          quantity: 80,
-          price: 1530.00,
-          totalInvested: 122400.00,
-          addedAt: new Date(Date.now() - 86400000 * 2).toISOString(),
-        },
-        {
-          id: 'inv_sample_4',
-          stockName: 'INFY',
-          quantity: 60,
-          price: 1845.25,
-          totalInvested: 110715.00,
-          addedAt: new Date(Date.now() - 86400000 * 1).toISOString(),
-        },
-        {
-          id: 'inv_sample_5',
-          stockName: 'TATAMOTORS',
-          quantity: 100,
-          price: 980.00,
-          totalInvested: 98000.00,
-          addedAt: new Date().toISOString(),
-        }
-      ]
-    },
-    {
-      userID: 'USR102',
-      name: 'Priya Sharma',
-      createdAt: new Date(Date.now() - 86400000 * 3).toISOString(),
-      investments: [
-        {
-          id: 'inv_sample_6',
-          stockName: 'ITC',
-          quantity: 300,
-          price: 495.50,
-          totalInvested: 148650.00,
-          addedAt: new Date(Date.now() - 86400000 * 2).toISOString(),
-        },
-        {
-          id: 'inv_sample_7',
-          stockName: 'BHARTIARTL',
-          quantity: 75,
-          price: 1650.00,
-          totalInvested: 123750.00,
-          addedAt: new Date(Date.now() - 86400000 * 1).toISOString(),
-        },
-        {
-          id: 'inv_sample_8',
-          stockName: 'ICICIBANK',
-          quantity: 90,
-          price: 1220.00,
-          totalInvested: 109800.00,
-          addedAt: new Date().toISOString(),
-        }
-      ]
-    },
-    {
-      userID: 'USR103',
-      name: 'Arjun Patel',
-      createdAt: new Date(Date.now() - 86400000 * 2).toISOString(),
-      investments: [
-        {
-          id: 'inv_sample_9',
-          stockName: 'LT',
-          quantity: 40,
-          price: 3650.00,
-          totalInvested: 146000.00,
-          addedAt: new Date(Date.now() - 86400000 * 1).toISOString(),
-        },
-        {
-          id: 'inv_sample_10',
-          stockName: 'SBIN',
-          quantity: 120,
-          price: 815.00,
-          totalInvested: 97800.00,
-          addedAt: new Date().toISOString(),
-        }
-      ]
-    }
-  ]
-};
 
 /**
  * Checks if browser localStorage is available and accessible
@@ -142,14 +29,13 @@ export function isStorageAvailable() {
 }
 
 /**
- * Load persisted application state from localStorage
- * Returns clean empty structure if not found or corrupted
+ * Load persisted application state from localStorage.
+ * Always returns clean empty structure ([]) on first run or if storage is empty.
  * 
  * @returns {{ users: Array<Object>, metadata: Object, isFirstRun: boolean }}
  */
 export function loadData() {
   if (!isStorageAvailable()) {
-    console.warn('[Storage] localStorage is not accessible in this environment.');
     return {
       users: [],
       metadata: { loadedFromStorage: false, error: 'Storage inaccessible' },
@@ -160,7 +46,7 @@ export function loadData() {
   try {
     const raw = window.localStorage.getItem(STORAGE_KEY);
     if (!raw) {
-      // First run: clean empty state
+      // First run: strictly clean empty state
       return {
         users: [],
         metadata: { loadedFromStorage: false, version: APP_VERSION },
@@ -172,7 +58,6 @@ export function loadData() {
     const validation = validateImportPayload(parsed);
 
     if (!validation.valid || !validation.sanitizedData) {
-      console.error('[Storage] Malformed data detected in storage:', validation.error);
       return {
         users: [],
         metadata: { loadedFromStorage: false, error: validation.error },
@@ -181,7 +66,7 @@ export function loadData() {
     }
 
     return {
-      users: validation.sanitizedData.users,
+      users: validation.sanitizedData.users || [],
       metadata: {
         loadedFromStorage: true,
         version: validation.sanitizedData.version || APP_VERSION,
@@ -190,7 +75,6 @@ export function loadData() {
       isFirstRun: false,
     };
   } catch (error) {
-    console.error('[Storage] Error reading or parsing localStorage:', error);
     return {
       users: [],
       metadata: { loadedFromStorage: false, error: error.message },
@@ -201,7 +85,6 @@ export function loadData() {
 
 /**
  * Saves application state safely into localStorage.
- * Ensures data matches the valid structure before serialization.
  * 
  * @param {Array<Object>} users
  * @returns {{ success: boolean, error?: string }}
@@ -212,8 +95,8 @@ export function saveData(users) {
   }
 
   try {
-    // Validate payload before saving
     const payload = {
+      appName: 'Stock Portfolio Management System',
       version: APP_VERSION,
       savedAt: new Date().toISOString(),
       users: Array.isArray(users) ? users : [],
@@ -223,19 +106,16 @@ export function saveData(users) {
     window.localStorage.setItem(STORAGE_KEY, serialized);
     return { success: true };
   } catch (error) {
-    console.error('[Storage] Failed to save state to localStorage:', error);
     let errorMessage = error.message;
-
     if (error.name === 'QuotaExceededError' || error.code === 22) {
-      errorMessage = 'Storage quota exceeded. Please export your backup and clear older data.';
+      errorMessage = 'Storage quota exceeded. Please export a backup and delete older entries.';
     }
-
     return { success: false, error: errorMessage };
   }
 }
 
 /**
- * Exports current application data as a formatted JSON string
+ * Exports current genuine user-created application data as JSON
  * @param {Array<Object>} users
  * @returns {string}
  */
@@ -244,7 +124,7 @@ export function exportData(users) {
     appName: 'Stock Portfolio Management System',
     version: APP_VERSION,
     exportedAt: new Date().toISOString(),
-    totalUsers: users.length,
+    totalUsers: (users || []).length,
     users: users || [],
   };
   return JSON.stringify(payload, null, 2);
@@ -259,7 +139,7 @@ export function downloadBackupFile(users) {
   const blob = new Blob([jsonString], { type: 'application/json' });
   const url = URL.createObjectURL(blob);
   const dateStr = new Date().toISOString().split('T')[0];
-  const filename = `stock-portfolio-backup-${dateStr}.json`;
+  const filename = `portfolio-backup-${dateStr}.json`;
 
   const link = document.createElement('a');
   link.href = url;
@@ -272,8 +152,6 @@ export function downloadBackupFile(users) {
 
 /**
  * Validates and imports a JSON string backup
- * Returns sanitized users or error description without mutating storage
- * 
  * @param {string} jsonString
  * @returns {{ success: boolean, users?: Array<Object>, error?: string }}
  */
@@ -318,14 +196,14 @@ export function clearData() {
 }
 
 /**
- * Returns metadata and diagnostics about the storage layer
+ * Returns storage metadata and diagnostics
  * @param {Array<Object>} currentUsers
  * @returns {Object}
  */
 export function getStorageInfo(currentUsers = []) {
   const available = isStorageAvailable();
   let usedBytes = 0;
-  let formattedSize = '0 KB';
+  let formattedSize = '0.00 KB';
 
   if (available) {
     try {
@@ -339,7 +217,8 @@ export function getStorageInfo(currentUsers = []) {
     }
   }
 
-  const holdingsCount = currentUsers.reduce((sum, u) => sum + (u.investments?.length || 0), 0);
+  const users = currentUsers || [];
+  const holdingsCount = users.reduce((sum, u) => sum + (u.investments?.length || 0), 0);
 
   return {
     isAvailable: available,
@@ -347,8 +226,7 @@ export function getStorageInfo(currentUsers = []) {
     version: APP_VERSION,
     usedBytes,
     formattedSize,
-    usersCount: currentUsers.length,
+    usersCount: users.length,
     holdingsCount,
-    storageQuotaLimit: 'Approx 5 MB (Standard browser localStorage)',
   };
 }

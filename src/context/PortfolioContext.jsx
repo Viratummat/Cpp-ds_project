@@ -6,7 +6,6 @@ import {
   downloadBackupFile,
   importData as storageImportData,
   getStorageInfo,
-  SAMPLE_DATA,
 } from '../services/storageService';
 import {
   validateUserId,
@@ -25,13 +24,13 @@ import { formatINR } from '../utils/currency';
 const PortfolioContext = createContext(null);
 
 export function PortfolioProvider({ children }) {
-  // Primary application state
+  // Primary application state — strictly starts empty
   const [users, setUsers] = useState([]);
   const [isLoaded, setIsLoaded] = useState(false);
   const [selectedUserId, setSelectedUserId] = useState(null);
   const [activeTab, setActiveTab] = useState('overview'); // 'overview' | 'users' | 'portfolio' | 'ranking' | 'settings'
 
-  // Modals state
+  // Modals state — all inputs start clean and empty
   const [addUserModalOpen, setAddUserModalOpen] = useState(false);
   const [editUserModal, setEditUserModal] = useState({ isOpen: false, user: null });
   const [addHoldingModal, setAddHoldingModal] = useState({ isOpen: false, userId: null });
@@ -60,7 +59,7 @@ export function PortfolioProvider({ children }) {
       type: toast.type || 'info', // 'success' | 'error' | 'warning' | 'info'
       title: toast.title || '',
       message: toast.message || '',
-      duration: toast.duration || 4500,
+      duration: toast.duration || 4000,
     };
     setToasts((prev) => [...prev, newToast]);
 
@@ -76,7 +75,7 @@ export function PortfolioProvider({ children }) {
     setToasts((prev) => prev.filter((t) => t.id !== id));
   }, []);
 
-  // Safe confirm dialog triggers
+  // Safe confirm dialog
   const openConfirm = useCallback(({ title, message, confirmText, cancelText, isDestructive, onConfirm }) => {
     setConfirmDialog({
       isOpen: true,
@@ -96,14 +95,14 @@ export function PortfolioProvider({ children }) {
     setConfirmDialog((prev) => ({ ...prev, isOpen: false }));
   }, []);
 
-  // Safe state persistence helper
-  const commitUsersState = useCallback((nextUsers, successMessage, failureContext = 'saving data') => {
+  // Safe persistence helper
+  const commitUsersState = useCallback((nextUsers, successMessage) => {
     const saveResult = saveData(nextUsers);
     if (!saveResult.success) {
       addToast({
         type: 'error',
         title: 'Save Failed',
-        message: `Could not save to localStorage: ${saveResult.error}. Changes were rolled back.`,
+        message: `Could not save to browser storage: ${saveResult.error}. Changes were rolled back.`,
       });
       return false;
     }
@@ -122,22 +121,17 @@ export function PortfolioProvider({ children }) {
   // Load from localStorage on initial mount
   useEffect(() => {
     const loaded = loadData();
-    setUsers(loaded.users || []);
-    if (loaded.users && loaded.users.length > 0) {
-      setSelectedUserId(loaded.users[0].userID);
+    const existingUsers = Array.isArray(loaded.users) ? loaded.users : [];
+    setUsers(existingUsers);
+    if (existingUsers.length > 0) {
+      setSelectedUserId(existingUsers[0].userID);
+    } else {
+      setSelectedUserId(null);
     }
     setIsLoaded(true);
+  }, []);
 
-    if (loaded.metadata?.error) {
-      addToast({
-        type: 'warning',
-        title: 'Storage Warning',
-        message: `Saved data could not be fully restored: ${loaded.metadata.error}. Initialized empty state.`,
-      });
-    }
-  }, [addToast]);
-
-  // Keep selected user valid if users list changes
+  // Keep selected user valid
   useEffect(() => {
     if (users.length === 0) {
       setSelectedUserId(null);
@@ -146,17 +140,14 @@ export function PortfolioProvider({ children }) {
     }
   }, [users, selectedUserId]);
 
-  // Selected User helper
   const selectedUser = useMemo(() => {
     return users.find((u) => u.userID === selectedUserId) || null;
   }, [users, selectedUserId]);
 
-  // Derived system metrics
   const systemMetrics = useMemo(() => {
     return calculateSystemMetrics(users);
   }, [users]);
 
-  // Storage info
   const storageInfo = useMemo(() => {
     return getStorageInfo(users);
   }, [users]);
@@ -186,7 +177,7 @@ export function PortfolioProvider({ children }) {
     };
 
     const nextUsers = [...users, newUser];
-    const ok = commitUsersState(nextUsers, `User "${newUser.name}" (ID: ${newUser.userID}) added successfully.`);
+    const ok = commitUsersState(nextUsers, `User "${newUser.name}" (ID: ${newUser.userID}) created successfully.`);
     if (ok) {
       setSelectedUserId(newUser.userID);
       setAddUserModalOpen(false);
@@ -224,12 +215,12 @@ export function PortfolioProvider({ children }) {
 
     openConfirm({
       title: `Delete User "${targetUser.name}"?`,
-      message: `Are you sure you want to delete user ID "${targetUser.userID}"? This will permanently delete all ${targetUser.investments?.length || 0} stock holdings in their portfolio.`,
+      message: `Are you sure you want to delete User ID "${targetUser.userID}"? This will permanently remove this user and all ${targetUser.investments?.length || 0} stock holdings.`,
       confirmText: 'Delete User & Portfolio',
       isDestructive: true,
       onConfirm: () => {
         const nextUsers = users.filter((u) => u.userID !== userId);
-        commitUsersState(nextUsers, `User "${targetUser.name}" and their portfolio were deleted.`);
+        commitUsersState(nextUsers, `User "${targetUser.name}" was removed.`);
       },
     });
   }, [users, openConfirm, commitUsersState, addToast]);
@@ -267,7 +258,6 @@ export function PortfolioProvider({ children }) {
     const qty = qtyValidation.parsed;
     const prc = priceValidation.parsed;
 
-    // Check if user already owns this stock
     const existingIndex = (targetUser.investments || []).findIndex(
       (inv) => inv.stockName.toUpperCase() === normalizedStock
     );
@@ -276,7 +266,7 @@ export function PortfolioProvider({ children }) {
     let successMessage = '';
 
     if (existingIndex !== -1) {
-      // Merge with existing holding using weighted average price
+      // Merge holding with weighted-average price
       const existingHolding = nextInvestments[existingIndex];
       const merged = calculateWeightedAverage(existingHolding, qty, prc);
 
@@ -288,9 +278,8 @@ export function PortfolioProvider({ children }) {
         lastAddedAt: new Date().toISOString(),
       };
 
-      successMessage = `Added ${qty} shares to existing ${normalizedStock} holding. New total: ${merged.quantity} shares @ avg price ${formatINR(merged.price)} (${formatINR(merged.totalInvested)} invested).`;
+      successMessage = `Added ${qty} shares to existing ${normalizedStock} holding. Weighted average price: ${formatINR(merged.price)}.`;
     } else {
-      // Add new holding node
       const total = calculateHoldingTotal(qty, prc);
       const newHolding = {
         id: `inv_${Date.now()}_${Math.random().toString(36).substring(2, 7)}`,
@@ -301,7 +290,7 @@ export function PortfolioProvider({ children }) {
         addedAt: new Date().toISOString(),
       };
       nextInvestments.push(newHolding);
-      successMessage = `Added ${normalizedStock} (${qty} shares @ ${formatINR(prc)}) to portfolio. Total invested: ${formatINR(total)}.`;
+      successMessage = `Added ${normalizedStock} (${qty} shares @ ${formatINR(prc)}) to ${targetUser.name}'s portfolio.`;
     }
 
     const nextUsers = users.map((u) => {
@@ -320,10 +309,7 @@ export function PortfolioProvider({ children }) {
 
   const editHolding = useCallback((userId, holdingId, newQuantity, newPrice) => {
     const targetUser = users.find((u) => u.userID === userId);
-    if (!targetUser) {
-      addToast({ type: 'error', title: 'Error', message: 'User not found.' });
-      return false;
-    }
+    if (!targetUser) return false;
 
     const qtyValidation = validateQuantity(newQuantity);
     if (!qtyValidation.valid) {
@@ -363,7 +349,7 @@ export function PortfolioProvider({ children }) {
       return u;
     });
 
-    const ok = commitUsersState(nextUsers, `Updated ${holdingName} holding: ${qty} shares @ ${formatINR(prc)} (${formatINR(newTotal)} total).`);
+    const ok = commitUsersState(nextUsers, `Updated ${holdingName} holding: ${qty} shares @ ${formatINR(prc)}.`);
     if (ok) {
       setEditHoldingModal({ isOpen: false, userId: null, holding: null });
     }
@@ -378,8 +364,8 @@ export function PortfolioProvider({ children }) {
     if (!holding) return;
 
     openConfirm({
-      title: `Remove ${holding.stockName} from Portfolio?`,
-      message: `Are you sure you want to remove ${holding.quantity} shares of ${holding.stockName} (${formatINR(holding.totalInvested)} invested) from ${targetUser.name}'s portfolio?`,
+      title: `Remove ${holding.stockName}?`,
+      message: `Are you sure you want to remove ${holding.quantity} shares of ${holding.stockName} (${formatINR(holding.totalInvested)}) from ${targetUser.name}'s portfolio?`,
       confirmText: 'Remove Holding',
       isDestructive: true,
       onConfirm: () => {
@@ -390,8 +376,7 @@ export function PortfolioProvider({ children }) {
           }
           return u;
         });
-
-        commitUsersState(nextUsers, `Removed ${holding.stockName} from ${targetUser.name}'s portfolio.`);
+        commitUsersState(nextUsers, `Removed ${holding.stockName} from portfolio.`);
       },
     });
   }, [users, openConfirm, commitUsersState]);
@@ -400,26 +385,10 @@ export function PortfolioProvider({ children }) {
   // DATA MANAGEMENT ACTIONS
   // ==========================================
 
-  const loadSampleDataset = useCallback(() => {
-    openConfirm({
-      title: 'Load Realistic Sample Dataset?',
-      message: 'This will replace current portfolio data with a comprehensive sample dataset featuring 3 users and realistic Indian equity investments (Reliance, TCS, HDFC Bank, Infosys, etc.).',
-      confirmText: 'Load Sample Data',
-      isDestructive: false,
-      onConfirm: () => {
-        const ok = commitUsersState(SAMPLE_DATA.users, 'Sample dataset loaded successfully!');
-        if (ok) {
-          setSelectedUserId('USR101');
-          setActiveTab('overview');
-        }
-      },
-    });
-  }, [openConfirm, commitUsersState]);
-
   const clearAllApplicationData = useCallback(() => {
     openConfirm({
       title: 'Reset All Application Data?',
-      message: 'Are you sure you want to clear all users, portfolios, and holdings? This action will reset localStorage to an empty state and cannot be undone unless you have an exported JSON backup.',
+      message: 'Are you sure you want to clear all registered users and investments? This will reset local storage to a clean empty state.',
       confirmText: 'Clear All Data',
       isDestructive: true,
       onConfirm: () => {
@@ -449,7 +418,7 @@ export function PortfolioProvider({ children }) {
     const importedUsers = result.users || [];
     const ok = commitUsersState(
       importedUsers,
-      `Successfully imported backup with ${importedUsers.length} users and their portfolios!`
+      `Successfully imported backup with ${importedUsers.length} user(s).`
     );
 
     if (ok && importedUsers.length > 0) {
@@ -463,7 +432,7 @@ export function PortfolioProvider({ children }) {
       addToast({
         type: 'warning',
         title: 'Export Warning',
-        message: 'No data to export. Add some users and investments first.',
+        message: 'No user data to export. Register users and investments first.',
       });
       return;
     }
@@ -509,7 +478,6 @@ export function PortfolioProvider({ children }) {
     addInvestment,
     editHolding,
     deleteHolding,
-    loadSampleDataset,
     clearAllApplicationData,
     importBackup,
     exportBackup,

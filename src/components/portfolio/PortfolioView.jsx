@@ -10,11 +10,10 @@ import {
   ArrowUpDown,
   User,
   Plus,
+  FolderPlus,
 } from 'lucide-react';
 import { usePortfolio } from '../../context/PortfolioContext';
-import { StatCard } from '../common/StatCard';
 import { AllocationChart } from '../dashboard/AllocationChart';
-import { EmptyState } from '../common/EmptyState';
 import {
   calculatePortfolioTotal,
   calculateAllocationPercentage,
@@ -36,7 +35,6 @@ export function PortfolioView() {
 
   const [holdingsSearch, setHoldingsSearch] = useState('');
 
-  // Calculations for current user
   const portfolioInvestments = useMemo(() => {
     return selectedUser?.investments || [];
   }, [selectedUser]);
@@ -45,7 +43,6 @@ export function PortfolioView() {
     return calculatePortfolioTotal(portfolioInvestments);
   }, [portfolioInvestments]);
 
-  // Filtered holdings
   const filteredHoldings = useMemo(() => {
     if (!holdingsSearch.trim()) return portfolioInvestments;
     const query = holdingsSearch.trim().toUpperCase();
@@ -56,133 +53,152 @@ export function PortfolioView() {
 
   if (users.length === 0) {
     return (
-      <div className="space-y-6">
+      <div className="space-y-8 pb-16">
         <div>
-          <h1 className="text-2xl font-extrabold text-white tracking-tight">
-            Portfolio Tracker
+          <span className="text-[10px] font-mono tracking-[0.25em] uppercase text-purple-400 block mb-1">
+            PORTFOLIO LEDGER
+          </span>
+          <h1 className="text-3xl font-extrabold text-white tracking-tight">
+            Asset Holdings
           </h1>
           <p className="text-xs text-slate-400 mt-1">
-            Individual user holdings and allocation analysis
+            Track individual stock allocations and weighted-average acquisition prices
           </p>
         </div>
-        <EmptyState
-          icon={Wallet}
-          title="No Users Available"
-          description="Register an investor profile before managing stock portfolios."
-          actionLabel="Create User"
-          onAction={() => setAddUserModalOpen(true)}
-          showSampleDataAction={true}
-        />
+
+        <div className="glass-card p-12 text-center border-dashed border-white/10">
+          <div className="w-16 h-16 rounded-2xl bg-white/[0.03] border border-white/10 flex items-center justify-center mx-auto mb-4 text-purple-400">
+            <FolderPlus className="w-8 h-8" />
+          </div>
+          <h3 className="text-lg font-bold text-white mb-2">
+            No users registered yet
+          </h3>
+          <p className="text-xs sm:text-sm text-slate-400 max-w-md mx-auto mb-6 leading-relaxed">
+            Register an investor profile first to begin creating stock portfolios and tracking acquisition costs.
+          </p>
+          <button
+            onClick={() => setAddUserModalOpen(true)}
+            className="pill-btn-neon"
+          >
+            + Register User Profile
+          </button>
+        </div>
       </div>
     );
   }
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-8 pb-16">
       {/* User Switcher Header */}
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 p-5 fintech-card">
-        <div className="flex items-center gap-3">
-          <div className="w-12 h-12 rounded-xl bg-emerald-950/60 border border-emerald-800/40 flex items-center justify-center text-emerald-400 flex-shrink-0">
+      <div className="glass-card p-5 sm:p-6 flex flex-col md:flex-row md:items-center justify-between gap-4">
+        <div className="flex items-center gap-3.5">
+          <div className="w-12 h-12 rounded-2xl bg-white/[0.04] border border-white/10 flex items-center justify-center text-purple-400 flex-shrink-0">
             <User className="w-6 h-6" />
           </div>
           <div>
-            <span className="text-xs font-semibold text-slate-400 uppercase tracking-wider block">
+            <span className="text-[10px] font-mono tracking-[0.2em] text-slate-400 uppercase block">
               Viewing Portfolio For
             </span>
-            <div className="flex items-center gap-2 mt-0.5">
-              <span className="text-lg font-bold text-white">
-                {selectedUser?.name || 'Select a user'}
+            <div className="flex items-center gap-2.5 mt-0.5">
+              <span className="text-xl font-bold text-white">
+                {selectedUser?.name || 'No user selected'}
               </span>
-              <span className="font-mono text-xs font-bold text-emerald-400 bg-[#0B0F19] px-2 py-0.5 rounded border border-[#1E293B]">
-                ID: {selectedUser?.userID}
-              </span>
+              {selectedUser && (
+                <span className="font-mono text-xs font-bold text-purple-300 bg-purple-950/50 px-2 py-0.5 rounded border border-purple-800/40">
+                  ID: {selectedUser.userID}
+                </span>
+              )}
             </div>
           </div>
         </div>
 
-        {/* User Switcher Dropdown & Actions */}
+        {/* User Switcher & Actions */}
         <div className="flex flex-wrap items-center gap-2.5">
-          <div className="relative min-w-[200px]">
-            <select
-              value={selectedUserId || ''}
-              onChange={(e) => setSelectedUserId(e.target.value)}
-              className="fintech-input text-xs font-semibold"
-            >
-              {users.map((u) => (
-                <option key={u.userID} value={u.userID} className="bg-[#111827] text-white">
-                  {u.name} ({u.userID}) — {u.investments?.length || 0} stocks
-                </option>
-              ))}
-            </select>
-          </div>
+          <select
+            value={selectedUserId || ''}
+            onChange={(e) => setSelectedUserId(e.target.value)}
+            className="cosmic-input !w-auto text-xs font-mono font-semibold"
+          >
+            {users.map((u) => (
+              <option key={u.userID} value={u.userID} className="bg-[#0B0D14] text-white">
+                {u.name} ({u.userID}) — {u.investments?.length || 0} stocks
+              </option>
+            ))}
+          </select>
 
           <button
             onClick={() => setActiveTab('ranking')}
-            className="fintech-btn-secondary !text-xs !py-2"
+            className="pill-btn-secondary !text-xs !py-2"
           >
-            <ArrowUpDown className="w-3.5 h-3.5 text-amber-400" />
-            Selection Sort Ranking
+            <ArrowUpDown className="w-3.5 h-3.5 text-purple-400" />
+            <span>Selection Sort</span>
           </button>
 
           <button
             onClick={() => setAddHoldingModal({ isOpen: true, userId: selectedUserId })}
-            className="fintech-btn-primary !text-xs !py-2"
+            className="pill-btn-neon !text-xs !py-2"
           >
-            <PlusCircle className="w-3.5 h-3.5 text-slate-950" />
-            Add Stock
+            <Plus className="w-3.5 h-3.5" />
+            <span>Add Stock</span>
           </button>
         </div>
       </div>
 
       {/* Summary Metrics */}
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-        <StatCard
-          title="Total Portfolio Investment"
-          value={formatINR(totalPortfolio)}
-          subtitle="Cumulative acquisition cost of all shares"
-          icon={Wallet}
-          accentColor="emerald"
-        />
+        <div className="glass-card p-5">
+          <span className="text-[10px] font-mono text-slate-400 uppercase tracking-widest block mb-1">
+            Total Invested
+          </span>
+          <div className="text-2xl font-extrabold text-white font-mono">
+            {formatINR(totalPortfolio)}
+          </div>
+          <p className="text-[11px] text-slate-500 mt-1">
+            Cumulative acquisition cost
+          </p>
+        </div>
 
-        <StatCard
-          title="Different Stocks"
-          value={`${portfolioInvestments.length} Holdings`}
-          subtitle="Unique stock positions in portfolio"
-          icon={Layers}
-          accentColor="cyan"
-        />
+        <div className="glass-card p-5">
+          <span className="text-[10px] font-mono text-slate-400 uppercase tracking-widest block mb-1">
+            Stock Positions
+          </span>
+          <div className="text-2xl font-extrabold text-white font-mono">
+            {portfolioInvestments.length} Holdings
+          </div>
+          <p className="text-[11px] text-slate-500 mt-1">
+            Unique stock positions in portfolio
+          </p>
+        </div>
 
-        <StatCard
-          title="Average Holding Cost"
-          value={
-            portfolioInvestments.length > 0
+        <div className="glass-card p-5">
+          <span className="text-[10px] font-mono text-slate-400 uppercase tracking-widest block mb-1">
+            Average Position Cost
+          </span>
+          <div className="text-2xl font-extrabold text-white font-mono">
+            {portfolioInvestments.length > 0
               ? formatINR(totalPortfolio / portfolioInvestments.length)
-              : '₹0.00'
-          }
-          subtitle="Average capital allocated per stock position"
-          icon={PieChartIcon}
-          accentColor="purple"
-        />
+              : '₹0.00'}
+          </div>
+          <p className="text-[11px] text-slate-500 mt-1">
+            Capital allocated per holding
+          </p>
+        </div>
       </div>
 
-      {/* Allocation Chart & Details */}
+      {/* Allocation Chart */}
       {portfolioInvestments.length > 0 && (
-        <div className="fintech-card p-5 sm:p-6">
-          <div className="flex items-center justify-between mb-4 pb-3 border-b border-[#1E293B]">
-            <div>
-              <h3 className="text-base font-bold text-white flex items-center gap-2">
-                <PieChartIcon className="w-4 h-4 text-emerald-400" />
-                Portfolio Asset Allocation
+        <div className="glass-card p-5 sm:p-6">
+          <div className="flex items-center justify-between mb-4 pb-3 border-b border-white/[0.06]">
+            <div className="flex items-center gap-2">
+              <PieChartIcon className="w-4 h-4 text-purple-400" />
+              <h3 className="text-sm font-bold text-white uppercase tracking-wider font-mono">
+                Asset Allocation Breakdown
               </h3>
-              <p className="text-xs text-slate-400 mt-0.5">
-                Relative percentage distribution of investments
-              </p>
             </div>
-            <span className="font-mono text-xs font-bold text-emerald-400">
+            <span className="font-mono text-xs font-bold text-purple-400">
               100% Capital Accounted
             </span>
           </div>
-
           <AllocationChart
             holdings={portfolioInvestments}
             totalPortfolio={totalPortfolio}
@@ -191,74 +207,75 @@ export function PortfolioView() {
       )}
 
       {/* Holdings Table */}
-      <div className="fintech-card overflow-hidden">
-        {/* Table Header / Toolbar */}
-        <div className="p-4 sm:p-5 border-b border-[#1E293B] bg-[#0E1524] flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+      <div className="glass-card overflow-hidden">
+        <div className="p-4 sm:p-5 border-b border-white/[0.06] bg-black/40 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
           <div>
-            <h3 className="text-base font-bold text-white">Stock Holdings</h3>
-            <p className="text-xs text-slate-400">
-              Individual positions with weighted-average purchase prices
+            <h3 className="text-sm font-bold text-white font-mono uppercase tracking-wider">
+              Stock Holdings
+            </h3>
+            <p className="text-[11px] text-slate-400">
+              Weighted-average acquisition costs and portfolio allocation percentages
             </p>
           </div>
 
           <div className="flex items-center gap-2">
             <div className="relative">
-              <Search className="w-3.5 h-3.5 absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none" />
+              <Search className="w-3.5 h-3.5 absolute left-3 top-1/2 -translate-y-1/2 text-slate-500 pointer-events-none" />
               <input
                 type="text"
                 value={holdingsSearch}
                 onChange={(e) => setHoldingsSearch(e.target.value)}
                 placeholder="Filter stocks..."
-                className="fintech-input pl-8 !py-1.5 !text-xs w-44 sm:w-56"
+                className="cosmic-input pl-8 !py-1.5 text-xs w-44 sm:w-52"
               />
             </div>
 
             <button
               onClick={() => setAddHoldingModal({ isOpen: true, userId: selectedUserId })}
-              className="fintech-btn-primary !py-1.5 !px-3 !text-xs whitespace-nowrap"
+              className="pill-btn-neon !py-1.5 !px-3 !text-xs whitespace-nowrap"
             >
-              <Plus className="w-3.5 h-3.5 text-slate-950" />
-              Add Stock
+              <Plus className="w-3.5 h-3.5" />
+              <span>Add Stock</span>
             </button>
           </div>
         </div>
 
         {portfolioInvestments.length === 0 ? (
-          <div className="p-8">
-            <EmptyState
-              icon={Layers}
-              title={`No Investments in ${selectedUser?.name}'s Portfolio`}
-              description="This user does not own any stocks yet. Add their first stock holding with quantity and purchase price."
-              actionLabel="Add Stock to Portfolio"
-              onAction={() => setAddHoldingModal({ isOpen: true, userId: selectedUserId })}
-            />
-          </div>
-        ) : filteredHoldings.length === 0 ? (
-          <div className="p-8 text-center">
-            <p className="text-sm text-slate-300 font-semibold mb-1">
-              No holdings found matching "{holdingsSearch}"
+          <div className="p-12 text-center">
+            <div className="w-12 h-12 rounded-xl bg-white/[0.03] border border-white/10 flex items-center justify-center mx-auto mb-3 text-purple-400">
+              <Layers className="w-6 h-6" />
+            </div>
+            <h4 className="text-base font-bold text-white mb-1">
+              No investments added yet
+            </h4>
+            <p className="text-xs text-slate-400 max-w-sm mx-auto mb-5">
+              Add your first stock investment with quantity and price to view portfolio metrics.
             </p>
             <button
-              onClick={() => setHoldingsSearch('')}
-              className="text-xs text-emerald-400 underline mt-2"
+              onClick={() => setAddHoldingModal({ isOpen: true, userId: selectedUserId })}
+              className="pill-btn-neon !text-xs"
             >
-              Clear Filter
+              + Add First Stock
             </button>
+          </div>
+        ) : filteredHoldings.length === 0 ? (
+          <div className="p-8 text-center text-xs text-slate-400 font-mono">
+            No holdings found matching "{holdingsSearch}"
           </div>
         ) : (
           <div className="overflow-x-auto">
             <table className="w-full text-left border-collapse text-xs sm:text-sm">
               <thead>
-                <tr className="border-b border-[#1E293B] bg-[#0B0F19]/60 text-[11px] font-semibold text-slate-400 uppercase tracking-wider">
-                  <th className="py-3 px-4 sm:px-6">Stock Name</th>
+                <tr className="border-b border-white/[0.06] bg-black/30 text-[10px] font-mono uppercase tracking-[0.2em] text-slate-400">
+                  <th className="py-3 px-4 sm:px-6">Stock</th>
                   <th className="py-3 px-4 sm:px-6 text-right">Quantity</th>
                   <th className="py-3 px-4 sm:px-6 text-right">Avg Purchase Price</th>
                   <th className="py-3 px-4 sm:px-6 text-right">Total Invested</th>
-                  <th className="py-3 px-4 sm:px-6 text-right">Portfolio Allocation</th>
+                  <th className="py-3 px-4 sm:px-6 text-right">Allocation</th>
                   <th className="py-3 px-4 sm:px-6 text-right">Actions</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-[#1E293B]">
+              <tbody className="divide-y divide-white/[0.04]">
                 {filteredHoldings.map((holding) => {
                   const allocation = calculateAllocationPercentage(
                     holding.totalInvested,
@@ -268,38 +285,34 @@ export function PortfolioView() {
                   return (
                     <tr
                       key={holding.id}
-                      className="hover:bg-[#162033]/60 transition-colors group"
+                      className="hover:bg-white/[0.02] transition-colors"
                     >
                       {/* Stock Name */}
-                      <td className="py-3.5 px-4 sm:px-6">
-                        <div className="flex items-center gap-2">
-                          <span className="font-mono font-bold text-white text-sm">
-                            {holding.stockName}
-                          </span>
-                        </div>
+                      <td className="py-3.5 px-4 sm:px-6 font-mono font-bold text-white text-sm">
+                        {holding.stockName}
                       </td>
 
                       {/* Quantity */}
-                      <td className="py-3.5 px-4 sm:px-6 text-right font-mono font-semibold text-slate-200">
+                      <td className="py-3.5 px-4 sm:px-6 text-right font-mono text-slate-200">
                         {holding.quantity.toLocaleString('en-IN')}
                       </td>
 
-                      {/* Average Purchase Price */}
+                      {/* Avg Price */}
                       <td className="py-3.5 px-4 sm:px-6 text-right font-mono text-slate-300">
                         {formatINR(holding.price)}
                       </td>
 
                       {/* Total Invested */}
-                      <td className="py-3.5 px-4 sm:px-6 text-right font-mono font-bold text-emerald-400">
+                      <td className="py-3.5 px-4 sm:px-6 text-right font-mono font-bold text-purple-300">
                         {formatINR(holding.totalInvested)}
                       </td>
 
                       {/* Portfolio Allocation */}
                       <td className="py-3.5 px-4 sm:px-6 text-right">
                         <div className="flex items-center justify-end gap-2 font-mono">
-                          <div className="w-16 bg-[#1E293B] h-1.5 rounded-full overflow-hidden hidden sm:block">
+                          <div className="w-16 bg-white/[0.06] h-1.5 rounded-full overflow-hidden hidden sm:block">
                             <div
-                              className="bg-emerald-400 h-full rounded-full"
+                              className="bg-gradient-to-r from-purple-400 to-indigo-400 h-full rounded-full"
                               style={{ width: `${Math.min(100, allocation)}%` }}
                             />
                           </div>
@@ -312,7 +325,6 @@ export function PortfolioView() {
                       {/* Actions */}
                       <td className="py-3.5 px-4 sm:px-6 text-right">
                         <div className="flex items-center justify-end gap-1.5">
-                          {/* Add More Shares */}
                           <button
                             onClick={() => {
                               setAddHoldingModal({
@@ -320,13 +332,12 @@ export function PortfolioView() {
                                 userId: selectedUserId,
                               });
                             }}
-                            className="p-1.5 rounded-lg text-slate-400 hover:text-emerald-400 hover:bg-[#1E293B] transition-colors"
-                            title="Add more shares to this stock (Weighted Average)"
+                            className="p-1.5 rounded-lg text-slate-400 hover:text-purple-300 hover:bg-white/[0.06] transition-colors"
+                            title="Add More Shares (Weighted Average)"
                           >
                             <PlusCircle className="w-4 h-4" />
                           </button>
 
-                          {/* Edit Holding */}
                           <button
                             onClick={() => {
                               setEditHoldingModal({
@@ -335,13 +346,12 @@ export function PortfolioView() {
                                 holding,
                               });
                             }}
-                            className="p-1.5 rounded-lg text-slate-400 hover:text-white hover:bg-[#1E293B] transition-colors"
+                            className="p-1.5 rounded-lg text-slate-400 hover:text-white hover:bg-white/[0.06] transition-colors"
                             title="Edit Holding"
                           >
                             <Edit2 className="w-4 h-4" />
                           </button>
 
-                          {/* Delete Holding */}
                           <button
                             onClick={() => deleteHolding(selectedUserId, holding.id)}
                             className="p-1.5 rounded-lg text-slate-400 hover:text-rose-400 hover:bg-rose-950/40 transition-colors"
